@@ -1,58 +1,85 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Ajuin - Sistem Tiket & Pengaduan
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Ajuin adalah aplikasi sistem tiket/pengaduan berbasis web yang dibangun menggunakan framework Laravel. Aplikasi ini memungkinkan pengguna umum untuk mengirimkan tiket pengaduan secara publik, melacak status tiket mereka, dan menyediakan dashboard yang komprehensif bagi admin/staf untuk mengelola tiket, pengguna, peran (roles), serta data toko/cabang.
 
-## About Laravel
+## 🌟 Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 1. Antarmuka Publik (Public Interface)
+*   **Kirim Tiket (Submit Ticket):** Formulir publik bagi masyarakat/pengguna untuk mengajukan tiket pengaduan atau layanan tanpa perlu login. Dilengkapi dengan fitur pelindung dari spam (*rate limiting*).
+*   **Lacak Tiket (Track Ticket):** Fitur bagi publik untuk mencari dan memantau status terkini dari tiket yang telah diajukan hanya dengan menggunakan nomor tiket (Ticket Number).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 2. Autentikasi & Keamanan (Authentication & Security)
+*   **Login & Logout:** Sistem masuk yang aman untuk staf dan admin.
+*   **Registrasi & Verifikasi OTP:** Pengguna baru dapat mendaftar untuk mendapatkan akses sistem, namun diwajibkan memverifikasi akun mereka menggunakan kode OTP (One Time Password) yang dikirimkan melalui email. Terdapat juga fitur kirim ulang (resend) OTP.
+*   **Throttling:** Perlindungan *brute-force* pada *endpoint* krusial seperti halaman login, register, submit form, dan verifikasi OTP.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 3. Manajemen Tiket (Ticket Management)
+*   **Daftar Tiket Cepat:** Tampilan seluruh tiket yang masuk dengan performa tinggi, didukung oleh **DataTables** untuk fitur pencarian, pengurutan, dan paginasi secara *server-side*.
+*   **Detail Tiket:** Melihat informasi terperinci dari setiap tiket.
+*   **Pembuatan Tiket Manual:** Memungkinkan staf/admin internal untuk membuatkan tiket secara manual jika diperlukan (misalnya pengaduan masuk lewat telepon).
+*   **Update Status Tiket:** Memperbarui tahapan status tiket (contoh: Menunggu, Diproses, Selesai) untuk menjaga transparansi penanganan pengaduan.
+*   **Ekspor Data:** Kemampuan mengekspor data tiket laporan ke dalam format **Excel** dan **PDF** untuk keperluan *backup* atau *reporting* (menggunakan library `maatwebsite/excel` & `barryvdh/laravel-dompdf`).
 
-## Learning Laravel
+### 4. Manajemen Pengguna & Hak Akses (User & Role Management)
+*   **Sistem RBAC Terpusat:** Pengelolaan hak akses menggunakan paket handal `spatie/laravel-permission`.
+*   **Manajemen Peran (Roles):** Admin super dapat membuat, mengubah, dan menghapus *role* (peran) serta menentukan secara spesifik fitur atau *permission* apa saja yang boleh diakses oleh *role* tersebut.
+*   **Manajemen Pengguna (Users):** Admin dapat melihat daftar seluruh pengguna sistem (staf/admin lain), mendaftarkan staf baru, mengubah data, mengatur perannya (*assign role*), dan menghapus pengguna.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 5. Manajemen Toko/Cabang (Store Management)
+*   **Kelola Data Toko:** Modul lengkap (CRUD) untuk menambahkan dan mengelola daftar toko, cabang, atau unit bisnis.
+*   **Global QR Code:** Fasilitas untuk *generate* (menghasilkan) QR Code secara instan (`simplesoftwareio/simple-qrcode`), yang nantinya bisa dicetak dan dipasang di lokasi fisik agar pengunjung/pelanggan dapat memindainya dan langsung diarahkan ke form submit tiket untuk cabang terkait.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 6. Laporan (Reports)
+*   Halaman dasbor khusus untuk meninjau ringkasan, rekapitulasi kinerja, atau pelaporan (*reporting*) terkait data tiket yang telah dikumpulkan.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## 🛠️ Teknologi & *Packages* yang Digunakan
+*   **Framework Utama:** Laravel (PHP ^8.3)
+*   **Manajemen Hak Akses:** `spatie/laravel-permission`
+*   **Grid & Tabel Data:** `yajra/laravel-datatables-oracle`
+*   **Ekspor Data Excel:** `maatwebsite/excel`
+*   **Ekspor Data PDF:** `barryvdh/laravel-dompdf`
+*   **Pembuat QR Code:** `simplesoftwareio/simple-qrcode`
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
 
-```bash
-composer require laravel/boost --dev
+## 🚀 Cara Instalasi & Menjalankan di Lokal
 
-php artisan boost:install
-```
+Jika Anda ingin mengembangkan atau menjalankan aplikasi ini di komputer lokal (local development), ikuti langkah-langkah berikut:
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. **Clone repository ini:**
+   ```bash
+   git clone https://github.com/andyka-salom/ajuin.git
+   ```
+2. **Masuk ke direktori aplikasi:**
+   ```bash
+   cd ajuin
+   ```
+3. **Instal dependensi *backend* (PHP):**
+   ```bash
+   composer install
+   ```
+4. **Persiapkan file konfigurasi (*environment*):**
+   ```bash
+   cp .env.example .env
+   ```
+5. **Buat Application Key:**
+   ```bash
+   php artisan key:generate
+   ```
+6. **Konfigurasi Database:** Buka file `.env` di teks editor, lalu sesuaikan kredensial koneksi database Anda (terutama `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`). Pastikan Anda juga mengonfigurasi pengaturan Mail (`MAIL_MAILER`, dll.) agar fitur OTP via email berfungsi.
+7. **Jalankan Migrasi Database beserta Seeder:**
+   ```bash
+   php artisan migrate --seed
+   ```
+8. **Instal dan kompilasi *asset frontend* (CSS/JS):**
+   ```bash
+   npm install
+   npm run build
+   ```
+9. **Jalankan server *development* Laravel:**
+   ```bash
+   php artisan serve
+   ```
+10. **Selesai!** Anda dapat mengakses aplikasi di browser melalui URL: `http://localhost:8000`
