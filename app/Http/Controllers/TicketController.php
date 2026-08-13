@@ -119,7 +119,7 @@ class TicketController extends Controller
 
         return view('tickets.show', [
             'ticket'       => $ticket,
-            'nextStatuses' => config('ajuin.status_flow')[$ticket->status] ?? [],
+            'nextStatuses' => $this->allowedStatuses($request, $ticket),
         ]);
     }
 
@@ -128,7 +128,7 @@ class TicketController extends Controller
         $ticket->load('store');
         abort_unless($request->user()->canSeeStore($ticket->store), 403);
 
-        $nextStatuses = config('ajuin.status_flow')[$ticket->status] ?? [];
+        $nextStatuses = $this->allowedStatuses($request, $ticket);
         $data = $request->validate([
             'status' => ['required', Rule::in($nextStatuses)],
             'note'   => [Rule::requiredIf(fn () => $request->input('status') === 'REJECTED'), 'nullable', 'string'],
@@ -152,6 +152,20 @@ class TicketController extends Controller
     }
 
     // ── Private helpers ─────────────────────────────────────────
+
+    /**
+     * Status tujuan yang boleh dipilih untuk ticket ini.
+     * Super Admin bebas pindah ke status mana saja (kecuali status sekarang);
+     * role lain mengikuti alur ketat config('ajuin.status_flow').
+     */
+    private function allowedStatuses(Request $request, Ticket $ticket): array
+    {
+        if ($request->user()->hasRole('Super Admin')) {
+            return array_values(array_diff(Ticket::STATUSES, [$ticket->status]));
+        }
+
+        return config('ajuin.status_flow')[$ticket->status] ?? [];
+    }
 
     /**
      * Build base query dengan semua filter request aktif.
