@@ -1,0 +1,35 @@
+name: Deploy ajuin
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ajuin
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -e
+            PROJECT_PATH="${{ secrets.VPS_PROJECT_PATH }}"
+            PROJECT_PATH="${PROJECT_PATH:-/var/www/ERP}"
+            STACK="ajuin"
+            echo ">> pull source"
+            cd "$PROJECT_PATH/apps/$STACK/$STACK"
+            git fetch --all --prune
+            git reset --hard origin/main
+            echo ">> rebuild stack"
+            cd "$PROJECT_PATH/apps/$STACK"
+            docker compose up -d --build
+            docker image prune -f
