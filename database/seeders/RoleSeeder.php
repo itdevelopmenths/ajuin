@@ -29,7 +29,6 @@ class RoleSeeder extends Seeder
             ],
             'HRGA'        => [
                 'ticket.view',
-                'ticket.create',
                 'ticket.update_status',
                 'ticket.delete',
                 'ticket.export',

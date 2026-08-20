@@ -17,7 +17,7 @@
     </p>
 
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="{{ url('/') }}" class="btn btn-primary px-8 py-3 rounded-xl font-semibold shadow-lg shadow-indigo-500/30">
+        <a href="{{ url('/') }}" class="btn btn-primary px-8 py-3 rounded-xl font-semibold shadow-lg shadow-slate-900/20">
             Kembali ke Beranda
         </a>
         <a href="javascript:history.back()" class="btn bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-8 py-3 rounded-xl font-semibold transition-colors">

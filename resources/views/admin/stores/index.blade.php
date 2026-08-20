@@ -14,17 +14,6 @@
 <div class="card" style="padding:1.25rem;margin-bottom:1rem;position:relative">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
         <h2 style="font-size:.875rem;font-weight:700;color:#0f172a">Tambah Lokasi Baru</h2>
-        <div style="display:flex;align-items:center;gap:.75rem">
-            <div style="font-size:.7rem;color:#64748b;background:#f1f5f9;padding:.25rem .5rem;border-radius:.375rem;font-family:monospace">
-                {{ route('public.submit.form') }}
-            </div>
-            <a href="{{ route('admin.stores.global-qr') }}" class="btn btn-secondary" style="padding:.3rem .6rem;font-size:.7rem">
-                <svg style="width:14px;height:14px;margin-right:.25rem" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"/>
-                </svg>
-                Download QR
-            </a>
-        </div>
     </div>
     <form method="POST" action="{{ route('admin.stores.store') }}"
           style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;align-items:end">
@@ -67,18 +56,20 @@
 @endif
 
 {{-- DataTable --}}
-<div class="card" style="overflow:hidden;padding:1rem">
-    <table id="stores-table" style="width:100%">
-        <thead>
-            <tr>
-                <th>Kode</th>
-                <th>Nama Lokasi</th>
-                <th>Kategori</th>
-                <th>Dibuat</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-    </table>
+<div class="card" style="padding:1rem">
+    <div style="overflow-x:auto">
+        <table id="stores-table" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Nama Lokasi</th>
+                    <th>Kategori</th>
+                    <th>Dibuat</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
 </div>
 @endsection
 

@@ -12,11 +12,32 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    /**
+     * Permission yang tidak boleh diberikan ke role tertentu meski dicentang di UI.
+     * Hanya Keptok (dan Super Admin) yang boleh membuat/menambah tiket.
+     */
+    private const RESTRICTED_ROLE_PERMISSIONS = [
+        'SPV'  => ['ticket.create'],
+        'HRGA' => ['ticket.create'],
+    ];
+
+    private function filterPermissions(string $roleName, array $permissions): array
+    {
+        $restricted = self::RESTRICTED_ROLE_PERMISSIONS[$roleName] ?? [];
+
+        return array_values(array_diff($permissions, $restricted));
+    }
+
     public function index(): View
     {
+        $roles = Role::query()->withCount('users')->with('permissions')->orderBy('name')->get();
+
         return view('admin.roles.index', [
-            'roles' => Role::query()->withCount('users')->with('permissions')->orderBy('name')->get(),
+            'roles' => $roles,
             'permissions' => Permission::query()->orderBy('name')->get()->groupBy(fn (Permission $permission) => str($permission->name)->before('.')->toString()),
+            'restrictedPermissions' => $roles->mapWithKeys(
+                fn (Role $role) => [$role->name => self::RESTRICTED_ROLE_PERMISSIONS[$role->name] ?? []]
+            ),
         ]);
     }
 
@@ -29,7 +50,7 @@ class RoleController extends Controller
         ]);
 
         Role::create(['name' => $data['name'], 'guard_name' => 'web'])
-            ->syncPermissions($data['permissions'] ?? []);
+            ->syncPermissions($this->filterPermissions($data['name'], $data['permissions'] ?? []));
 
         return back()->with('status', 'Role berhasil dibuat.');
     }
@@ -45,7 +66,7 @@ class RoleController extends Controller
         ]);
 
         $role->update(['name' => $data['name']]);
-        $role->syncPermissions($data['permissions'] ?? []);
+        $role->syncPermissions($this->filterPermissions($data['name'], $data['permissions'] ?? []));
 
         return back()->with('status', 'Role berhasil diperbarui.');
     }

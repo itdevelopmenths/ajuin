@@ -4,11 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Store;
-use BaconQrCode\Encoder\Encoder;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
-use BaconQrCode\Writer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,23 +52,6 @@ class StoreController extends Controller
         $store->update($this->validated($request, $store));
 
         return back()->with('status', 'Toko berhasil diperbarui.');
-    }
-
-    public function globalQr(): \Illuminate\Http\Response
-    {
-        $renderer = new ImageRenderer(
-            new RendererStyle(700, 2),
-            new SvgImageBackEnd()
-        );
-
-        $svg = (new Writer($renderer))->writeString(
-            route('public.submit.form'),
-            Encoder::DEFAULT_BYTE_MODE_ECODING
-        );
-
-        return response($svg)
-            ->header('Content-Type', 'image/svg+xml')
-            ->header('Content-Disposition', 'attachment; filename="ajuin-public-qr.svg"');
     }
 
     public function destroy(Store $store): RedirectResponse

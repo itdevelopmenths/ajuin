@@ -84,38 +84,44 @@
 </div>
 
 {{-- DataTable --}}
-<div class="card" style="overflow:hidden;padding:1rem">
-    <table id="tickets-table" style="width:100%">
-        <thead>
-            <tr>
-                <th>No. Ticket</th>
-                <th>Toko</th>
-                <th>Tipe</th>
-                <th>Status</th>
-                <th>Handler</th>
-                <th>Dibuat</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-    </table>
+<div class="card" style="padding:1rem">
+    <div style="overflow-x:auto">
+        <table id="tickets-table" style="width:100%">
+            <thead>
+                <tr>
+                    <th>No. Ticket</th>
+                    <th>Toko</th>
+                    <th>Tipe</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                    <th>Handler</th>
+                    <th>Dibuat</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
 </div>
 
 <style>
-    .ticket-link { font-weight:700; color:#6366f1; text-decoration:none; font-family:monospace; font-size:.8125rem; }
-    .ticket-link:hover { color:#4f46e5; text-decoration:underline; }
+    .ticket-link { font-weight:700; color:#111827; text-decoration:none; font-family:monospace; font-size:.8125rem; }
+    .ticket-link:hover { color:#000000; text-decoration:underline; }
     .btn-dt-action {
         display:inline-flex; align-items:center; padding:.3rem .75rem;
         border-radius:.375rem; font-size:.75rem; font-weight:600;
-        background:#f5f3ff; color:#6366f1; text-decoration:none; border:1px solid #ede9fe;
+        background:#f1f5f9; color:#111827; text-decoration:none; border:1px solid #e2e8f0;
         transition:background .15s;
     }
-    .btn-dt-action:hover { background:#ede9fe; }
+    .btn-dt-action:hover { background:#e2e8f0; }
 </style>
 @endsection
 
 @push('scripts')
 <script>
 $(function () {
+    $('#f-store').select2({ placeholder: 'Semua toko', allowClear: true });
+    $('#f-spv').select2({ placeholder: 'Semua Pengurus', allowClear: true });
+
     function getFilters() {
         return {
             status:   $('#f-status').val(),
@@ -131,7 +137,7 @@ $(function () {
         processing: true,
         serverSide: true,
         pageLength: 25,
-        order: [[7, 'desc']],
+        order: [[6, 'desc']],
         language: {
             processing: 'Memuat…',
             search: 'Cari:',
@@ -149,6 +155,7 @@ $(function () {
             { data: 'store_name',    name: 'store.name' },
             { data: 'type',          name: 'type' },
             { data: 'status',        name: 'status' },
+            { data: 'deadline',      orderable: false, searchable: false },
             { data: 'handler_name',  name: 'handler.name', orderable: false },
             { data: 'created_at',    name: 'created_at' },
             { data: 'action',        orderable: false, searchable: false },
@@ -160,7 +167,8 @@ $(function () {
 
     // Reset
     $('#f-reset').on('click', function () {
-        $('#f-status,#f-type,#f-store,#f-spv').val('');
+        $('#f-status,#f-type').val('');
+        $('#f-store,#f-spv').val('').trigger('change');
         $('#f-from,#f-to').val('');
         table.search('').ajax.reload();
     });

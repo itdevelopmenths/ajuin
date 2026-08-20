@@ -44,11 +44,6 @@ class Store extends Model
         return $this->hasMany(Ticket::class);
     }
 
-    public function submitUrl(): string
-    {
-        return route('public.submit.form');
-    }
-
     /**
      * Scope toko yang boleh dilihat oleh user.
      * Hanya 2 tipe scope: ALL (Super Admin) dan STORE (SPV per toko).

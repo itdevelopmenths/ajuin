@@ -4,7 +4,7 @@
 <div class="mx-auto max-w-lg px-4 py-10 relative">
     <div class="bg-white rounded-2xl shadow-xl p-8" style="box-shadow: 0 20px 40px -15px rgba(15,23,42,0.1); border: 1px solid #f1f5f9;">
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4" style="background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 100%); color: #6366f1;">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4" style="background: linear-gradient(135deg, #e2e8f0 0%, #e2e8f0 100%); color: #111827;">
                 <svg style="width: 28px; height: 28px;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
@@ -25,20 +25,14 @@
         <form action="{{ route('public.track.search') }}" method="GET">
             <div class="mb-5">
                 <label for="ticket_number" class="block text-sm font-bold text-slate-700 mb-2">Nomor Pengajuan</label>
-                <input type="text" id="ticket_number" name="ticket_number" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-mono" style="border-color: #cbd5e1; font-size: 1rem; color: #0f172a;" placeholder="AJN-XXXXXXXX-XXXX" required autofocus autocomplete="off">
+                <input type="text" id="ticket_number" name="ticket_number" class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-slate-900 focus:border-slate-1000 transition-all font-mono" style="border-color: #cbd5e1; font-size: 1rem; color: #0f172a;" placeholder="AJN-XXXXXXXX-XXXX" required autofocus autocomplete="off">
             </div>
 
-            <button type="submit" class="w-full btn btn-primary py-3 text-base shadow-lg shadow-indigo-500/30" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+            <button type="submit" class="w-full btn btn-primary py-3 text-base shadow-lg shadow-slate-900/20" style="background: #111827;">
                 Cari Pengajuan
             </button>
         </form>
 
-        <div class="mt-8 text-center border-t border-slate-100 pt-6">
-            <p class="text-sm text-slate-500 mb-3">Belum membuat pengajuan?</p>
-            <a href="{{ route('public.submit.form') }}" class="inline-block text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
-                Buat Pengajuan Baru &rarr;
-            </a>
-        </div>
     </div>
 </div>
 @endsection

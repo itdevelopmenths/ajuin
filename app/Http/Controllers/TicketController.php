@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\TicketsExport;
+use App\Models\MaintenanceType;
 use App\Models\Store;
 use App\Models\Ticket;
 use App\Models\User;
@@ -42,12 +43,13 @@ class TicketController extends Controller
             ->editColumn('status', fn (Ticket $t) =>
                 '<span class="badge badge-' . $t->status . '">' . (config('ajuin.statuses')[$t->status] ?? $t->status) . '</span>'
             )
+            ->addColumn('deadline', fn (Ticket $t) => $this->renderDeadlineBadge($t))
             ->editColumn('created_at', fn (Ticket $t) => $t->created_at->format('d M Y H:i'))
             ->addColumn('handler_name', fn (Ticket $t) => $t->handler?->name ?? '—')
             ->addColumn('action', fn (Ticket $t) =>
                 '<a class="btn-dt-action" href="' . route('tickets.show', $t) . '">Detail</a>'
             )
-            ->rawColumns(['ticket_number', 'status', 'action'])
+            ->rawColumns(['ticket_number', 'status', 'deadline', 'action'])
             ->toJson();
     }
 
@@ -64,20 +66,24 @@ class TicketController extends Controller
     public function create(Request $request): View
     {
         return view('tickets.create', [
-            'stores' => $this->visibleStores($request),
+            'stores'           => $this->visibleStores($request),
+            'maintenanceTypes' => MaintenanceType::query()->with('tier')->orderBy('name')->get(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $isMaintenance = $request->input('type') === 'MAINTENANCE';
+
         $data = $request->validate([
             'store_id'     => ['required', 'exists:stores,id'],
-            'submitted_by' => ['required', 'string', 'max:100'],
-            'jabatan'      => ['required', 'string', 'max:100'],
             'type'         => ['required', Rule::in(array_keys(config('ajuin.ticket_types')))],
+            'maintenance_type_id'    => [Rule::requiredIf($isMaintenance), 'nullable', 'exists:maintenance_types,id'],
+            'recommendation_links'   => ['nullable', 'array', 'max:10'],
+            'recommendation_links.*' => ['nullable', 'url', 'max:2048'],
             'description'  => ['required', 'string', 'min:10'],
             'attachments'  => ['required', 'array', 'min:1', 'max:5'],
-            'attachments.*'=> ['file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'attachments.*'=> ['file', $isMaintenance ? 'mimes:jpg,jpeg,png' : 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ]);
 
         $store = Store::findOrFail($data['store_id']);
@@ -88,11 +94,20 @@ class TicketController extends Controller
             $attachments[] = $file->store('ticket-attachments', 'public');
         }
 
+        $recommendationLinks = $data['type'] === 'PEMBELIAN_PERALATAN'
+            ? array_values(array_filter($data['recommendation_links'] ?? []))
+            : [];
+
+        $maintenanceType = $isMaintenance ? MaintenanceType::with('tier')->findOrFail($data['maintenance_type_id']) : null;
+
         $ticketData = [
             'store_id'     => $data['store_id'],
-            'submitted_by' => $data['submitted_by'],
-            'jabatan'      => $data['jabatan'],
+            'submitted_by' => $request->user()->name,
             'type'         => $data['type'],
+            'maintenance_type_id'       => $maintenanceType?->id,
+            'maintenance_tier'          => $maintenanceType?->tier?->name,
+            'maintenance_deadline_days' => $maintenanceType?->tier?->deadline_days,
+            'recommendation_links' => $recommendationLinks !== [] ? $recommendationLinks : null,
             'description'  => $data['description'],
             'ticket_number'=> Ticket::nextNumber(),
             'source'       => 'HRGA_INITIATIVE',
@@ -129,17 +144,31 @@ class TicketController extends Controller
         abort_unless($request->user()->canSeeStore($ticket->store), 403);
 
         $nextStatuses = $this->allowedStatuses($request, $ticket);
+        $isCompleting = $request->input('status') === 'SELESAI';
+
         $data = $request->validate([
             'status' => ['required', Rule::in($nextStatuses)],
             'note'   => [Rule::requiredIf(fn () => $request->input('status') === 'REJECTED'), 'nullable', 'string'],
+            'completion_attachments'   => [Rule::requiredIf($isCompleting), 'array', 'min:1', 'max:5'],
+            'completion_attachments.*' => ['file', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
 
-        $from = $ticket->status;
-        $ticket->fill([
+        $ticketUpdate = [
             'status'      => $data['status'],
             'handled_by'  => $request->user()->id,
             'resolved_at' => in_array($data['status'], Ticket::FINAL_STATUSES, true) ? now() : $ticket->resolved_at,
-        ])->save();
+        ];
+
+        if ($isCompleting) {
+            $completionAttachments = [];
+            foreach ($request->file('completion_attachments') as $file) {
+                $completionAttachments[] = $file->store('ticket-attachments', 'public');
+            }
+            $ticketUpdate['completion_attachments'] = $completionAttachments;
+        }
+
+        $from = $ticket->status;
+        $ticket->fill($ticketUpdate)->save();
 
         $ticket->logs()->create([
             'user_id'     => $request->user()->id,
@@ -152,6 +181,30 @@ class TicketController extends Controller
     }
 
     // ── Private helpers ─────────────────────────────────────────
+
+    /**
+     * Render badge deadline maintenance (overdue/segera/normal) untuk kolom DataTables.
+     */
+    private function renderDeadlineBadge(Ticket $ticket): string
+    {
+        $deadline = $ticket->maintenanceDeadlineAt();
+        if (! $deadline) {
+            return '<span style="color:#cbd5e1">—</span>';
+        }
+
+        $styles = [
+            'overdue' => ['bg' => '#fee2e2', 'fg' => '#b91c1c', 'label' => 'Terlambat'],
+            'soon'    => ['bg' => '#fef3c7', 'fg' => '#92400e', 'label' => 'Segera'],
+            'ok'      => ['bg' => '#f1f5f9', 'fg' => '#334155', 'label' => null],
+        ];
+        $style = $styles[$ticket->maintenanceDeadlineStatus()] ?? $styles['ok'];
+
+        $label = $style['label'] ? ' · ' . $style['label'] : '';
+
+        return '<span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;font-weight:700;'
+            . 'padding:.2rem .625rem;border-radius:999px;background:' . $style['bg'] . ';color:' . $style['fg'] . '">'
+            . $deadline->format('d M Y') . $label . '</span>';
+    }
 
     /**
      * Status tujuan yang boleh dipilih untuk ticket ini.

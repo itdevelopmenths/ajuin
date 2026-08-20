@@ -3,9 +3,9 @@
 @section('content')
 <div class="mx-auto max-w-2xl px-4 py-8 relative">
     {{-- Header Action --}}
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 class="text-xl font-bold text-slate-800">Tracking Pengajuan</h1>
-        <button id="btn-download" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 4px 14px rgba(99,102,241,0.3);">
+        <button id="btn-download" class="btn btn-primary" style="background: #111827; box-shadow: 0 4px 14px rgba(15,23,42,0.3);">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
@@ -34,7 +34,7 @@
         {{-- Content Info --}}
         <div style="background: white; border-radius: 1.5rem 1.5rem 0 0; margin-top: -1.5rem; padding: 2rem; position: relative;">
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px dashed #e2e8f0;">
+            <div class="track-info-grid" style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px dashed #e2e8f0;">
                 <div>
                     <p style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem;">Lokasi Toko</p>
                     <p style="font-size: 0.95rem; font-weight: 600; color: #1e293b;">{{ $ticket->store?->name ?? '—' }}</p>
@@ -82,7 +82,7 @@
                         @foreach($ticket->logs as $log)
                         <li style="position: relative; padding-left: 2rem;">
                             {{-- Dot indicator --}}
-                            <div style="position: absolute; left: 0; top: 0.25rem; width: 1rem; height: 1rem; border-radius: 50%; background: white; border: 3px solid {{ $loop->last ? '#6366f1' : '#cbd5e1' }}; z-index: 1;"></div>
+                            <div style="position: absolute; left: 0; top: 0.25rem; width: 1rem; height: 1rem; border-radius: 50%; background: white; border: 3px solid {{ $loop->last ? '#111827' : '#cbd5e1' }}; z-index: 1;"></div>
                             
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem;">
                                 <span style="font-size: 0.875rem; font-weight: 700; color: {{ $loop->last ? '#0f172a' : '#64748b' }};">{{ config('ajuin.statuses')[$log->to_status] ?? $log->to_status }}</span>
@@ -111,6 +111,12 @@
         </div>
     </div>
 </div>
+
+<style>
+@media (min-width: 420px) {
+    .track-info-grid { grid-template-columns: 1fr 1fr !important; }
+}
+</style>
 
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

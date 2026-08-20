@@ -19,19 +19,20 @@
         html, body { font-family: 'Inter', system-ui, sans-serif; }
 
         :root {
-            --c-primary: #6366f1;
-            --c-primary-dark: #4f46e5;
-            --c-secondary: #8b5cf6;
+            --c-primary: #111827;
+            --c-primary-dark: #000000;
+            --c-secondary: #111827;
             --c-ink: #0f172a;
             --c-muted: #64748b;
             --c-line: #e2e8f0;
             --c-surface: #f8fafc;
             --sidebar-w: 268px;
+            --sidebar-w-collapsed: 76px;
         }
 
         /* ─── Body background ─────────────────────────── */
         body {
-            background: linear-gradient(150deg, #f0f4ff 0%, #f8fafc 40%, #eef2fb 100%);
+            background: #f8fafc;
             min-height: 100vh;
             color: var(--c-ink);
         }
@@ -50,29 +51,55 @@
             z-index: 50;
             border-right: 1px solid rgba(226,232,240,0.8);
             box-shadow: 4px 0 24px rgba(15,23,42,0.03);
+            transition: width .2s ease;
         }
 
-        .sidebar-brand {
-            padding: 1.375rem 1.125rem 1.125rem;
+        .sidebar-brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.125rem 1rem;
+            gap: .5rem;
+            border-bottom: 1px solid rgba(226,232,240,0.8);
+        }
+        .sidebar-brand-link {
             display: flex;
             align-items: center;
             gap: .875rem;
-            border-bottom: 1px solid rgba(226,232,240,0.8);
             text-decoration: none;
+            min-width: 0;
+        }
+
+        .sidebar-collapse-btn {
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            display: none;
+            place-items: center;
+            border-radius: .5rem;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #475569;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+        }
+        .sidebar-collapse-btn:hover { background: #f1f5f9; color: #0f172a; }
+        .sidebar-collapse-btn svg { width: 13px; height: 13px; transition: transform .2s ease; }
+        @media (min-width: 1025px) {
+            .sidebar-collapse-btn { display: grid; }
         }
 
         .sidebar-logo {
             flex-shrink: 0;
             width: 38px;
             height: 38px;
-            background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%);
+            background: var(--c-primary);
             border-radius: 10px;
             display: grid;
             place-items: center;
             font-size: 1rem;
             font-weight: 900;
             color: #fff;
-            box-shadow: 0 4px 14px rgba(99,102,241,0.45);
             letter-spacing: -.02em;
         }
 
@@ -128,11 +155,13 @@
         .nav-link:hover .nav-icon { opacity: 1; }
 
         .nav-link.active {
-            background: linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.05));
-            color: #4f46e5;
-            border: 1px solid rgba(99,102,241,0.15);
+            background: #f1f5f9;
+            color: #0f172a;
+            font-weight: 700;
+            border-left: 3px solid #0f172a;
+            padding-left: calc(.75rem - 3px);
         }
-        .nav-link.active .nav-icon { opacity: 1; color: #6366f1; }
+        .nav-link.active .nav-icon { opacity: 1; color: #0f172a; }
 
         .sidebar-footer {
             padding: .875rem 1rem;
@@ -149,8 +178,8 @@
             flex-shrink: 0;
             width: 32px;
             height: 32px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, var(--c-primary), var(--c-secondary));
+            border-radius: 50%;
+            background: var(--c-primary);
             display: grid;
             place-items: center;
             font-size: .75rem;
@@ -161,6 +190,22 @@
         .sidebar-user-name  { font-size: .8rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
         .sidebar-user-role  { font-size: .6875rem; font-weight: 500; color: #64748b; }
 
+        /* ─── Sidebar collapsed state (desktop only) ──── */
+        @media (min-width: 1025px) {
+            body.sidebar-collapsed .sidebar { width: var(--sidebar-w-collapsed); }
+            body.sidebar-collapsed .main-wrapper { margin-left: var(--sidebar-w-collapsed); width: calc(100% - var(--sidebar-w-collapsed)); }
+            body.sidebar-collapsed .sidebar-brand-text,
+            body.sidebar-collapsed .sidebar-section,
+            body.sidebar-collapsed .nav-label,
+            body.sidebar-collapsed .sidebar-user-info { display: none; }
+            body.sidebar-collapsed .sidebar-brand-row { justify-content: center; padding-left: .5rem; padding-right: .5rem; position: relative; }
+            body.sidebar-collapsed .sidebar-brand-link { justify-content: center; }
+            body.sidebar-collapsed .sidebar-collapse-btn { position: absolute; right: -13px; top: 1.25rem; box-shadow: 0 1px 4px rgba(15,23,42,.12); }
+            body.sidebar-collapsed .sidebar-collapse-btn svg { transform: rotate(180deg); }
+            body.sidebar-collapsed .nav-link { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
+            body.sidebar-collapsed .sidebar-user { flex-direction: column; gap: .625rem; }
+        }
+
         /* ─── Main wrapper ────────────────────────────── */
         .main-wrapper {
             margin-left: var(--sidebar-w);
@@ -170,6 +215,7 @@
             flex: 1 1 auto;
             flex-direction: column;
             min-width: 0;
+            transition: margin-left .2s ease, width .2s ease;
         }
 
         /* ─── Topbar ──────────────────────────────────── */
@@ -210,24 +256,17 @@
             box-shadow: 0 4px 24px rgba(15,23,42,0.09);
         }
 
-        /* ─── Stat card icon blobs ────────────────────── */
+        /* ─── Stat card icons ──────────────────────────── */
         .stat-icon {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             border-radius: 10px;
             display: grid;
             place-items: center;
+            background: #f1f5f9;
+            color: #475569;
         }
-        .stat-icon svg { width: 20px; height: 20px; }
-
-        .si-indigo { background: linear-gradient(135deg,#6366f1,#818cf8); color:#fff; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
-        .si-violet { background: linear-gradient(135deg,#8b5cf6,#a78bfa); color:#fff; box-shadow:0 4px 12px rgba(139,92,246,0.3); }
-        .si-amber  { background: linear-gradient(135deg,#f59e0b,#fbbf24); color:#fff; box-shadow:0 4px 12px rgba(245,158,11,0.3); }
-        .si-blue   { background: linear-gradient(135deg,#3b82f6,#60a5fa); color:#fff; box-shadow:0 4px 12px rgba(59,130,246,0.3); }
-        .si-green  { background: linear-gradient(135deg,#10b981,#34d399); color:#fff; box-shadow:0 4px 12px rgba(16,185,129,0.3); }
-        .si-red    { background: linear-gradient(135deg,#ef4444,#f87171); color:#fff; box-shadow:0 4px 12px rgba(239,68,68,0.3); }
-        .si-teal   { background: linear-gradient(135deg,#14b8a6,#2dd4bf); color:#fff; box-shadow:0 4px 12px rgba(20,184,166,0.3); }
-        .si-slate  { background: linear-gradient(135deg,#64748b,#94a3b8); color:#fff; box-shadow:0 4px 12px rgba(100,116,139,0.3); }
+        .stat-icon svg { width: 18px; height: 18px; }
 
         /* ─── Buttons ─────────────────────────────────── */
         .btn {
@@ -250,13 +289,12 @@
         .btn svg { width: 15px; height: 15px; }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%);
+            background: var(--c-primary);
             color: #fff;
-            box-shadow: 0 2px 8px rgba(99,102,241,0.32);
         }
         .btn-primary:hover {
+            background: var(--c-primary-dark);
             transform: translateY(-1px);
-            box-shadow: 0 5px 18px rgba(99,102,241,0.45);
             color: #fff;
         }
 
@@ -289,8 +327,8 @@
         .btn-primary:not(.btn) {
             display:inline-flex;align-items:center;gap:.4rem;padding:.5875rem 1.125rem;
             border-radius:.625rem;font-size:.8125rem;font-weight:600;cursor:pointer;
-            background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
-            box-shadow:0 2px 8px rgba(99,102,241,.32);transition:all .18s;text-decoration:none;
+            background:#111827;color:#fff;
+            transition:all .18s;text-decoration:none;
         }
         .btn-muted {
             display:inline-flex;align-items:center;gap:.4rem;padding:.5625rem 1rem;
@@ -317,7 +355,7 @@
         .select2-container--default.select2-container--open .select2-selection--single,
         .select2-container--default .select2-selection--single:focus {
             border-color: var(--c-primary) !important;
-            box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
+            box-shadow: 0 0 0 3px rgba(15,23,42,0.12) !important;
         }
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             padding-left: 0 !important;
@@ -378,7 +416,7 @@
         }
         .form-input:focus {
             border-color: var(--c-primary);
-            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+            box-shadow: 0 0 0 3px rgba(15,23,42,0.12);
         }
         textarea.form-input { resize: vertical; }
 
@@ -406,7 +444,7 @@
         .badge-SCREENING                  { background:#fef9c3; color:#854d0e; }
         .badge-IN_PROGRESS                { background:#dbeafe; color:#1e40af; }
         .badge-PEMBAYARAN                 { background:#ffedd5; color:#9a3412; }
-        .badge-EKSEKUSI                   { background:#ede9fe; color:#5b21b6; }
+        .badge-EKSEKUSI                   { background:#cffafe; color:#155e75; }
         .badge-SELESAI                    { background:#d1fae5; color:#065f46; }
         .badge-REJECTED                   { background:#fee2e2; color:#b91c1c; }
         /* legacy status aliases (data lama sebelum migrasi) */
@@ -414,7 +452,7 @@
         .badge-APPROVED                   { background:#dcfce7; color:#15803d; }
         .badge-DONE                       { background:#d1fae5; color:#065f46; }
         /* store category badges */
-        .badge-cat-TOKO                   { background:#e0e7ff; color:#3730a3; }
+        .badge-cat-TOKO                   { background:#e2e8f0; color:#334155; }
         .badge-cat-GUDANG                 { background:#fef3c7; color:#92400e; }
         .badge-cat-MESS                   { background:#ccfbf1; color:#115e59; }
         /* ─── Alert / Flash ───────────────────────────── */
@@ -435,10 +473,7 @@
             font-weight: 700;
             letter-spacing: .07em;
             text-transform: uppercase;
-            background: linear-gradient(135deg, var(--c-primary), var(--c-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--c-muted);
         }
 
         .page-title {
@@ -489,7 +524,7 @@
         .dt-container .dt-input:focus,
         .dt-container .dt-select:focus {
             border-color: var(--c-primary) !important;
-            box-shadow: 0 0 0 2px rgba(99,102,241,.12) !important;
+            box-shadow: 0 0 0 2px rgba(15,23,42,.12) !important;
         }
         .dt-pager .dt-pager-button {
             border-radius: .4375rem !important;
@@ -537,7 +572,6 @@
             display: grid;
             place-items: center;
             margin-top: 2px;
-            box-shadow: 0 2px 8px rgba(99,102,241,.3);
         }
         .timeline-dot svg { width: 15px; height: 15px; color: #fff; }
 
@@ -575,6 +609,11 @@
     </style>
 </head>
 <body class="antialiased">
+<script>
+    if (localStorage.getItem('ajuin_sidebar_collapsed') === '1') {
+        document.body.classList.add('sidebar-collapsed');
+    }
+</script>
 
 @auth
 <div class="lg:flex" style="min-height:100vh">
@@ -582,84 +621,101 @@
     {{-- ── Sidebar ────────────────────────────────── --}}
     <aside class="sidebar">
         {{-- Brand --}}
-        <a href="{{ route('dashboard') }}" class="sidebar-brand">
-            <span class="sidebar-logo">A</span>
-            <span class="sidebar-brand-text">
-                <span class="sidebar-brand-name">Ajuin</span>
-                <span class="sidebar-brand-sub">Heaven Scent Ops</span>
-            </span>
-        </a>
+        <div class="sidebar-brand-row">
+            <a href="{{ route('dashboard') }}" class="sidebar-brand-link">
+                <span class="sidebar-logo">A</span>
+                <span class="sidebar-brand-text">
+                    <span class="sidebar-brand-name">Ajuin</span>
+                </span>
+            </a>
+            <button type="button" id="sidebar-collapse-btn" class="sidebar-collapse-btn"
+                    onclick="toggleSidebarCollapse()" title="Ciutkan/lebarkan sidebar" aria-label="Ciutkan/lebarkan sidebar">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5 12 12l6.75-7.5M11.25 19.5 4.5 12l6.75-7.5"/>
+                </svg>
+            </button>
+        </div>
 
         {{-- Navigation --}}
         <nav class="sidebar-nav">
-            <a href="{{ route('dashboard') }}"
+            <a href="{{ route('dashboard') }}" title="Dashboard"
                class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
                 </svg>
-                Dashboard
+                <span class="nav-label">Dashboard</span>
             </a>
 
             @can('ticket.view')
-            <a href="{{ route('tickets.index') }}"
+            <a href="{{ route('tickets.index') }}" title="Tickets"
                class="nav-link {{ request()->routeIs('tickets.index','tickets.show') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H6.911a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661Z"/>
                 </svg>
-                Tickets
+                <span class="nav-label">Tickets</span>
             </a>
             @endcan
 
             @can('ticket.create')
-            <a href="{{ route('tickets.create') }}"
+            <a href="{{ route('tickets.create') }}" title="Buat Ticket"
                class="nav-link {{ request()->routeIs('tickets.create') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                 </svg>
-                Buat Ticket
+                <span class="nav-label">Buat Ticket</span>
             </a>
             @endcan
 
             @can('report.view')
-            <a href="{{ route('reports.index') }}"
+            <a href="{{ route('reports.index') }}" title="Laporan"
                class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/>
                 </svg>
-                Laporan
+                <span class="nav-label">Laporan</span>
             </a>
             @endcan
 
-            @canany(['role.manage','user.view','store.manage'])
+            @canany(['role.manage','user.view','store.manage','maintenance_type.manage'])
             <div class="sidebar-section">Admin</div>
 
             @can('role.manage')
-            <a href="{{ route('admin.roles.index') }}"
+            <a href="{{ route('admin.roles.index') }}" title="Roles"
                class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
                 </svg>
-                Roles
+                <span class="nav-label">Roles</span>
             </a>
             @endcan
 
             @can('user.view')
-            <a href="{{ route('admin.users.index') }}"
+            <a href="{{ route('admin.users.index') }}" title="Users"
                class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/>
                 </svg>
-                Users
+                <span class="nav-label">Users</span>
             </a>
             @endcan
 
             @can('store.manage')
-            <a href="{{ route('admin.stores.index') }}"
+            <a href="{{ route('admin.stores.index') }}" title="Lokasi"
                class="nav-link {{ request()->routeIs('admin.stores.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016 2.993 2.993 0 0 0 2.25-1.016 3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"/>
                 </svg>
-                Lokasi
+                <span class="nav-label">Lokasi</span>
+            </a>
+            @endcan
+
+            @can('maintenance_type.manage')
+            <a href="{{ route('admin.maintenance-types.index') }}" title="Jenis Maintenance"
+               class="nav-link {{ request()->routeIs('admin.maintenance-types.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L1.5 3l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z"/>
+                </svg>
+                <span class="nav-label">Jenis Maintenance</span>
             </a>
             @endcan
             @endcanany
@@ -668,8 +724,8 @@
         {{-- User footer --}}
         <div class="sidebar-footer">
             <div class="sidebar-user">
-                <span class="sidebar-avatar">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span>
-                <div style="flex:1;min-width:0">
+                <span class="sidebar-avatar" title="{{ auth()->user()->name }}">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span>
+                <div class="sidebar-user-info" style="flex:1;min-width:0">
                     <div class="sidebar-user-name truncate">{{ auth()->user()->name }}</div>
                     <div class="sidebar-user-role">{{ auth()->user()->getRoleNames()->join(', ') ?: 'User' }}</div>
                 </div>
@@ -691,7 +747,7 @@
         <header class="topbar">
             <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <button type="button" class="lg:hidden text-slate-500 hover:text-indigo-600 transition" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+                    <button type="button" class="lg:hidden text-slate-500 hover:text-slate-900 transition" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
                         <svg style="width:24px;height:24px" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
@@ -703,7 +759,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="hidden sm:flex items-center gap-2 text-sm">
-                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold text-white" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span>
+                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white" style="background:#111827">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span>
                         <span class="font-medium text-slate-700 text-xs">{{ auth()->user()->name }}</span>
                     </span>
                 </div>
@@ -743,12 +799,17 @@
                 setTimeout(() => backdrop.style.display = 'none', 300);
             }
         }
+
+        function toggleSidebarCollapse() {
+            const collapsed = document.body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('ajuin_sidebar_collapsed', collapsed ? '1' : '0');
+        }
     </script>
 </div>
 
 @else
 {{-- ── Guest layout ─────────────────────────────── --}}
-<main style="min-height:100vh;display:grid;place-items:center;padding:2rem 1rem;background:linear-gradient(150deg,#f0f4ff 0%,#f8fafc 40%,#eef2fb 100%)">
+<main style="min-height:100vh;display:grid;place-items:center;padding:2rem 1rem;background:#f8fafc">
     @if(session('status'))
         <div class="alert alert-success" style="position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);z-index:99;white-space:nowrap">
             {{ session('status') }}

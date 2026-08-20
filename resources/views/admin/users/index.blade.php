@@ -93,10 +93,10 @@
     .btn-dt-action {
         display:inline-flex; align-items:center; padding:.3rem .75rem;
         border-radius:.375rem; font-size:.75rem; font-weight:600;
-        background:#f5f3ff; color:#6366f1; text-decoration:none; border:1px solid #ede9fe;
+        background:#f1f5f9; color:#111827; text-decoration:none; border:1px solid #e2e8f0;
         transition:background .15s;
     }
-    .btn-dt-action:hover { background:#ede9fe; }
+    .btn-dt-action:hover { background:#e2e8f0; }
 </style>
 
 {{-- Modal tambah user --}}
@@ -125,7 +125,7 @@
                     <div style="display:flex;gap:1rem;flex-wrap:wrap">
                         @foreach($roles as $role)
                         <label style="display:flex;align-items:center;gap:.375rem;font-size:.875rem;cursor:pointer">
-                            <input type="checkbox" name="roles[]" value="{{ $role->name }}" style="accent-color:#6366f1">
+                            <input type="checkbox" name="roles[]" value="{{ $role->name }}" style="accent-color:#111827">
                             {{ $role->name }}
                         </label>
                         @endforeach
@@ -136,7 +136,7 @@
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.25rem .75rem;max-height:160px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:.5rem;padding:.75rem">
                         @foreach($stores as $store)
                         <label style="display:flex;align-items:center;gap:.375rem;font-size:.75rem;cursor:pointer">
-                            <input type="checkbox" name="store_ids[]" value="{{ $store->id }}" style="width:14px;height:14px;accent-color:#6366f1;flex-shrink:0">
+                            <input type="checkbox" name="store_ids[]" value="{{ $store->id }}" style="width:14px;height:14px;accent-color:#111827;flex-shrink:0">
                             <span><b style="font-family:monospace;font-size:.7rem">{{ $store->code }}</b> {{ $store->name }}</span>
                         </label>
                         @endforeach

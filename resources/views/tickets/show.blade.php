@@ -1,6 +1,31 @@
 @extends('layouts.app', ['title' => $ticket->ticket_number])
 
 @section('content')
+@if($ticket->type === 'MAINTENANCE' && $ticket->maintenance_deadline_days)
+@php
+    $mtDeadline = $ticket->maintenanceDeadlineAt();
+    $mtOverdue  = $ticket->isMaintenanceOverdue();
+@endphp
+<div id="maintenance-deadline-popup" style="position:fixed;inset:0;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1.5rem">
+    <div style="background:#fff;border-radius:1.25rem;max-width:480px;width:100%;padding:2.5rem 2rem;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.35)">
+        <div style="width:64px;height:64px;border-radius:50%;background:{{ $mtOverdue ? '#fee2e2' : '#fef3c7' }};display:grid;place-items:center;margin:0 auto 1.25rem">
+            <svg style="width:32px;height:32px;color:{{ $mtOverdue ? '#dc2626' : '#d97706' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+        </div>
+        <p style="font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:{{ $mtOverdue ? '#dc2626' : '#d97706' }}">{{ $mtOverdue ? 'Deadline Terlewat' : 'Perhatian Deadline Maintenance' }}</p>
+        <h2 style="font-size:1.75rem;font-weight:800;color:#0f172a;margin-top:.5rem">Tier {{ $ticket->maintenance_tier }} — {{ $ticket->maintenance_deadline_days }} Hari</h2>
+        <p style="font-size:.9375rem;color:#475569;margin-top:.75rem;line-height:1.6">
+            Ticket ini harus selesai paling lambat<br>
+            <strong style="color:#0f172a">{{ $mtDeadline->translatedFormat('d F Y, H:i') }}</strong>
+        </p>
+        @if($mtOverdue)
+        <p style="font-size:.875rem;color:#dc2626;font-weight:700;margin-top:.5rem">⚠ Deadline sudah terlewat!</p>
+        @endif
+        <button type="button" onclick="document.getElementById('maintenance-deadline-popup').remove()" class="btn btn-primary" style="margin-top:1.5rem;width:100%;justify-content:center">
+            Mengerti
+        </button>
+    </div>
+</div>
+@endif
 {{-- Page header --}}
 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
     <div>
@@ -32,6 +57,14 @@
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Tipe</div>
                     <div style="font-size:.875rem;font-weight:600;color:#1e293b">{{ config('ajuin.ticket_types')[$ticket->type] ?? $ticket->type }}</div>
                 </div>
+                @if($ticket->maintenance_deadline_days)
+                <div>
+                    <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Deadline</div>
+                    <div style="font-size:.875rem;font-weight:600;color:{{ $ticket->isMaintenanceOverdue() ? '#dc2626' : '#1e293b' }}">
+                        Tier {{ $ticket->maintenance_tier }} · {{ $ticket->maintenanceDeadlineAt()->translatedFormat('d M Y') }}
+                    </div>
+                </div>
+                @endif
                 <div>
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Sumber</div>
                     <div style="font-size:.8125rem;font-weight:500;color:#475569">{{ $ticket->source }}</div>
@@ -76,6 +109,19 @@
                 </div>
             </div>
             @endif
+
+            @if(!empty($ticket->completion_attachments))
+            <div style="margin-top:1.5rem">
+                <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Bukti Selesai</div>
+                <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+                    @foreach($ticket->completion_attachments as $index => $attachment)
+                    <a href="{{ Storage::url($attachment) }}" target="_blank" style="display:block;border-radius:.5rem;overflow:hidden;border:1px solid #e2e8f0;width:fit-content;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
+                        <img src="{{ Storage::url($attachment) }}" alt="Bukti selesai {{ $index + 1 }}" style="width:160px;height:160px;object-fit:cover;display:block;transition:transform .2s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
 
         {{-- Update Status --}}
@@ -83,19 +129,24 @@
             <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Update Status</h2>
             @can('ticket.update_status')
                 @if($nextStatuses)
-                    <form method="post" action="{{ route('tickets.update-status', $ticket) }}" class="space-y-3" id="update-status-form">
+                    <form method="post" action="{{ route('tickets.update-status', $ticket) }}" class="space-y-3" id="update-status-form" enctype="multipart/form-data">
                         @csrf @method('PATCH')
                         <div>
                             <label class="form-label" style="margin-bottom:.3rem">Status baru</label>
-                            <select name="status" class="form-input">
+                            <select name="status" class="form-input" id="update-status-select" required>
+                                <option value="" disabled selected>Saat ini: {{ config('ajuin.statuses')[$ticket->status] ?? $ticket->status }}</option>
                                 @foreach($nextStatuses as $status)
                                 <option value="{{ $status }}">{{ config('ajuin.statuses')[$status] }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="form-label" style="margin-bottom:.3rem">Catatan <span style="color:#94a3b8;font-weight:400">(opsional)</span></label>
+                            <label class="form-label" style="margin-bottom:.3rem">Catatan <span style="color:#94a3b8;font-weight:400" id="update-note-hint">(opsional)</span></label>
                             <textarea name="note" rows="3" class="form-input" placeholder="Tambahkan catatan status…"></textarea>
+                        </div>
+                        <div id="completion-attachments-field" style="display:none">
+                            <label class="form-label" style="margin-bottom:.3rem">Bukti Selesai <span style="color:#ef4444">*</span> <span style="font-weight:400;color:#94a3b8">(foto, wajib min. 1 file)</span></label>
+                            <input type="file" name="completion_attachments[]" id="completion-attachments-input" accept=".jpg,.jpeg,.png" multiple class="form-input" style="padding:.5rem">
                         </div>
                         <button class="btn btn-primary" style="width:100%;justify-content:center">Update Status</button>
                     </form>
@@ -151,4 +202,35 @@
     .lg-grid-cols-3 > :first-child { grid-column: span 2 !important; }
 }
 </style>
+
+@push('scripts')
+<script>
+    (function () {
+        const statusSelect = document.getElementById('update-status-select');
+        const completionField = document.getElementById('completion-attachments-field');
+        const completionInput = document.getElementById('completion-attachments-input');
+        const noteHint = document.getElementById('update-note-hint');
+        if (!statusSelect) return;
+
+        function toggleCompletionField() {
+            const isCompleting = statusSelect.value === 'SELESAI';
+            completionField.style.display = isCompleting ? 'block' : 'none';
+            completionInput.required = isCompleting;
+
+            const isRejecting = statusSelect.value === 'REJECTED';
+            noteHint.textContent = isRejecting ? '(wajib untuk penolakan)' : '(opsional)';
+        }
+
+        statusSelect.addEventListener('change', toggleCompletionField);
+        toggleCompletionField();
+
+        document.getElementById('update-status-form').addEventListener('submit', function (e) {
+            if (statusSelect.value === 'SELESAI' && (!completionInput.files || completionInput.files.length === 0)) {
+                e.preventDefault();
+                alert('Bukti selesai wajib diisi minimal 1 foto.');
+            }
+        });
+    })();
+</script>
+@endpush
 @endsection

@@ -42,14 +42,14 @@
                     <input name="password" type="password" placeholder="Kosongkan jika tidak diubah" class="form-input">
                 </div>
                 <div style="display:flex;align-items:center;gap:.5rem;padding-bottom:.5rem">
-                    <input type="checkbox" id="active" name="is_active" value="1" @checked(old('is_active', $user->is_active)) style="width:16px;height:16px;accent-color:#6366f1">
+                    <input type="checkbox" id="active" name="is_active" value="1" @checked(old('is_active', $user->is_active)) style="width:16px;height:16px;accent-color:#111827">
                     <label for="active" style="font-size:.875rem;font-weight:600;color:#374151;cursor:pointer">Akun Aktif</label>
                 </div>
             </div>
         </div>
 
         {{-- Role & Toko --}}
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;padding:1.5rem">
+        <div class="role-store-grid" style="display:grid;grid-template-columns:1fr;gap:1.5rem;padding:1.5rem">
             {{-- Role --}}
             <div>
                 <p style="font-size:.7rem;font-weight:700;color:#94a3b8;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.625rem">Role</p>
@@ -58,7 +58,7 @@
                     <label style="display:flex;align-items:center;gap:.5rem;font-size:.875rem;cursor:pointer">
                         <input type="checkbox" name="roles[]" value="{{ $role->name }}"
                                @checked(is_array(old('roles')) ? in_array($role->name, old('roles')) : $user->hasRole($role->name))
-                               style="width:16px;height:16px;accent-color:#6366f1">
+                               style="width:16px;height:16px;accent-color:#111827">
                         <span>{{ $role->name }}</span>
                     </label>
                     @endforeach
@@ -82,7 +82,7 @@
                     <label class="store-item" style="display:flex;align-items:center;gap:.5rem;font-size:.8125rem;cursor:pointer;padding:.25rem 0">
                         <input type="checkbox" name="store_ids[]" value="{{ $store->id }}"
                                @checked(is_array(old('store_ids')) ? in_array($store->id, old('store_ids')) : $user->scopes->where('store_id', $store->id)->isNotEmpty())
-                               style="width:15px;height:15px;accent-color:#6366f1;flex-shrink:0">
+                               style="width:15px;height:15px;accent-color:#111827;flex-shrink:0">
                         <span title="{{ $store->name }}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                             <span class="store-code" style="font-weight:700;color:#374151;font-family:monospace;font-size:.75rem">{{ $store->code }}</span>
                             <span class="store-name" style="color:#64748b;margin-left:.25rem">{{ $store->name }}</span>
@@ -100,6 +100,12 @@
         </div>
     </form>
 </div>
+
+<style>
+@media (min-width: 768px) {
+    .role-store-grid { grid-template-columns: 1fr 2fr !important; }
+}
+</style>
 @endsection
 
 @push('scripts')

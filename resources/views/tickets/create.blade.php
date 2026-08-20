@@ -11,7 +11,7 @@
         cursor: pointer;
         transition: border-color .15s, background .15s;
     }
-    .file-zone:hover { border-color: #6366f1; background: rgba(99,102,241,.02); }
+    .file-zone:hover { border-color: #111827; background: rgba(15,23,42,.02); }
     .file-zone.has-file { border-color: #10b981; background: rgba(16,185,129,.03); }
     .file-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
     .file-zone-icon { width: 36px; height: 36px; border-radius: 10px; background: #f1f5f9; display: grid; place-items: center; margin: 0 auto .625rem; }
@@ -39,22 +39,6 @@
                 </select>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
-                <div>
-                    <label class="form-label" for="submitted_by">Submitted by</label>
-                    <input id="submitted_by" name="submitted_by" type="text"
-                        value="{{ old('submitted_by', auth()->user()->name) }}"
-                        class="form-input" placeholder="Nama pengaju" required>
-                </div>
-
-                <div>
-                    <label class="form-label" for="jabatan">Jabatan</label>
-                    <input id="jabatan" name="jabatan" type="text"
-                        value="{{ old('jabatan') }}"
-                        class="form-input" placeholder="cth. Kepala Toko, SPV, Staff" required>
-                </div>
-            </div>
-
             <div>
                 <label class="form-label" for="type">Jenis Pengajuan</label>
                 <select id="type" name="type" class="form-input" required>
@@ -62,6 +46,26 @@
                     <option value="{{ $key }}" @selected(old('type') === $key)>{{ $label }}</option>
                     @endforeach
                 </select>
+            </div>
+
+            <div id="maintenance-type-field" style="display:none">
+                <label class="form-label" for="maintenance_type_id">Jenis Maintenance</label>
+                <select id="maintenance_type_id" name="maintenance_type_id" class="form-input">
+                    <option value="">— Pilih jenis maintenance —</option>
+                    @foreach($maintenanceTypes as $mt)
+                    <option value="{{ $mt->id }}" data-tier="{{ $mt->tier->name }}" data-deadline-days="{{ $mt->tier->deadline_days }}"
+                        @selected(old('maintenance_type_id') == $mt->id)>{{ $mt->name }} (Tier {{ $mt->tier->name }})</option>
+                    @endforeach
+                </select>
+                <div id="maintenance-tier-badge" style="display:none;margin-top:.625rem;padding:.625rem .875rem;border-radius:.625rem;background:#fef3c7;border:1px solid #fde68a;font-size:.8125rem;color:#92400e;font-weight:600"></div>
+            </div>
+
+            <div id="recommendation-links-field" style="display:none">
+                <label class="form-label">Link Rekomendasi <span style="font-weight:400;color:#94a3b8">(opsional, bisa lebih dari satu)</span></label>
+                <div id="recommendation-links-list" style="display:flex;flex-direction:column;gap:.625rem"></div>
+                <button type="button" id="add-link-btn" style="margin-top:.5rem;background:#fff;color:#111827;border:1.5px dashed #111827;border-radius:.625rem;padding:.625rem 1rem;font-size:.875rem;font-weight:600;cursor:pointer;width:100%;text-align:center;transition:background .15s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
+                    + Tambah Link
+                </button>
             </div>
 
             <div>
@@ -82,7 +86,7 @@
                     <div class="file-zone-sub" id="file-zone-sub">JPG, PNG, atau PDF (maks. 2 MB per file, maks. 5 file)</div>
                 </div>
                 <div id="file-list" style="margin-top: 0.5rem; display: none; flex-direction: column; gap: 0.5rem;"></div>
-                <button type="button" id="add-more-files-btn" style="display: none; margin-top: 0.25rem; background: #fff; color: #6366f1; border: 1.5px dashed #6366f1; border-radius: 0.625rem; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background .15s;" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='#fff'">
+                <button type="button" id="add-more-files-btn" style="display: none; margin-top: 0.25rem; background: #fff; color: #111827; border: 1.5px dashed #111827; border-radius: 0.625rem; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
                     + Tambah File Lainnya
                 </button>
             </div>
@@ -108,13 +112,94 @@
             allowClear: true
         });
 
+        const typeSelect = document.getElementById('type');
+
+        /* ── Jenis Maintenance (hanya untuk tipe Maintenance) ── */
+        const maintenanceField     = document.getElementById('maintenance-type-field');
+        const maintenanceSelect    = document.getElementById('maintenance_type_id');
+        const maintenanceTierBadge = document.getElementById('maintenance-tier-badge');
+        const attachmentHint       = document.getElementById('file-zone-sub');
+
+        function updateMaintenanceBadge() {
+            const opt = maintenanceSelect.options[maintenanceSelect.selectedIndex];
+            if (opt && opt.value) {
+                maintenanceTierBadge.textContent = `Tier ${opt.dataset.tier} — Deadline ${opt.dataset.deadlineDays} hari sejak ticket dibuat`;
+                maintenanceTierBadge.style.display = 'block';
+            } else {
+                maintenanceTierBadge.style.display = 'none';
+            }
+        }
+
+        function toggleMaintenanceField() {
+            const isMaintenance = typeSelect.value === 'MAINTENANCE';
+            maintenanceField.style.display = isMaintenance ? 'block' : 'none';
+            maintenanceSelect.required = isMaintenance;
+            if (!isMaintenance) {
+                maintenanceSelect.value = '';
+                maintenanceTierBadge.style.display = 'none';
+            }
+
+            // Lampiran maintenance hanya foto — tidak menerima PDF
+            if (attachmentHint) {
+                attachmentHint.textContent = isMaintenance
+                    ? 'JPG atau PNG saja (maks. 2 MB per file, maks. 5 file)'
+                    : 'JPG, PNG, atau PDF (maks. 2 MB per file, maks. 5 file)';
+            }
+            if (fileInput) {
+                fileInput.setAttribute('accept', isMaintenance ? '.jpg,.jpeg,.png' : '.jpg,.jpeg,.png,.pdf');
+            }
+        }
+
+        maintenanceSelect.addEventListener('change', updateMaintenanceBadge);
+        typeSelect.addEventListener('change', toggleMaintenanceField);
+
+        /* ── Link rekomendasi (hanya untuk Pembelian Peralatan) ── */
+        const linksField     = document.getElementById('recommendation-links-field');
+        const linksList      = document.getElementById('recommendation-links-list');
+        const addLinkBtn     = document.getElementById('add-link-btn');
+        const MAX_LINKS      = 10;
+
+        function addLinkRow(value = '') {
+            if (linksList.children.length >= MAX_LINKS) return;
+
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;gap:.5rem;align-items:center';
+            row.innerHTML = `
+                <input type="url" name="recommendation_links[]" value="${value.replace(/"/g, '&quot;')}"
+                    class="form-input" placeholder="https://…">
+                <button type="button" class="remove-link-btn" title="Hapus link"
+                    style="color:#ef4444;background:none;border:none;cursor:pointer;padding:.35rem;border-radius:.375rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg style="width:18px;height:18px" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            row.querySelector('.remove-link-btn').addEventListener('click', () => row.remove());
+            linksList.appendChild(row);
+        }
+
+        function toggleLinksField() {
+            if (typeSelect.value === 'PEMBELIAN_PERALATAN') {
+                linksField.style.display = 'block';
+                if (linksList.children.length === 0) addLinkRow();
+            } else {
+                linksField.style.display = 'none';
+                linksList.innerHTML = '';
+            }
+        }
+
+        typeSelect.addEventListener('change', toggleLinksField);
+        addLinkBtn.addEventListener('click', () => addLinkRow());
+        toggleLinksField();
+
         /* ── File upload zone ────────────────────────────────── */
         const fileZone  = document.getElementById('file-zone');
         const fileInput = document.getElementById('attachment-input');
         const fileLabel = document.getElementById('file-label');
         const fileList = document.getElementById('file-list');
         const addMoreBtn = document.getElementById('add-more-files-btn');
-        
+
+        toggleMaintenanceField();
+        updateMaintenanceBadge();
+
         let selectedFiles = [];
 
         function renderFileList() {
@@ -186,7 +271,7 @@
             });
 
             // Drag-and-drop
-            fileZone.addEventListener('dragover', e => { e.preventDefault(); fileZone.style.borderColor = '#6366f1'; });
+            fileZone.addEventListener('dragover', e => { e.preventDefault(); fileZone.style.borderColor = '#111827'; });
             fileZone.addEventListener('dragleave', ()  => { fileZone.style.borderColor = ''; });
             fileZone.addEventListener('drop', e => {
                 e.preventDefault();

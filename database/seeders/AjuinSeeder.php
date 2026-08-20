@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\MaintenanceType;
 use App\Models\Store;
 use App\Models\Ticket;
+use App\Models\Tier;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -79,6 +81,17 @@ class AjuinSeeder extends Seeder
         $admin->scopes()->updateOrCreate(
             ['scope_type' => 'ALL'],
             ['store_id' => null]
+        );
+
+        // ── Tier & deadline maintenance ────────────────────────────
+        $tierA = Tier::firstOrCreate(['name' => 'A'], ['deadline_days' => 3]);
+        Tier::firstOrCreate(['name' => 'B'], ['deadline_days' => 7]);
+        Tier::firstOrCreate(['name' => 'C'], ['deadline_days' => 14]);
+
+        // ── Jenis Maintenance (berelasi ke tier) ───────────────────
+        MaintenanceType::firstOrCreate(
+            ['name' => 'Kerusakan Kaca'],
+            ['tier_id' => $tierA->id],
         );
 
         // ── Sample ticket ────────────────────────────────────────

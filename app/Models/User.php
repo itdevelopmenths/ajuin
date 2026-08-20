@@ -30,11 +30,6 @@ class User extends Authenticatable
         return $this->hasMany(UserScope::class);
     }
 
-    public function otpVerifications(): HasMany
-    {
-        return $this->hasMany(OtpVerification::class);
-    }
-
     /**
      * Cek apakah user boleh melihat/mengakses toko ini.
      * Super Admin → semua toko. SPV → hanya toko yang di-assign.
