@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'jabatan',
     'type',
     'estimated_price',
+    'payment_amount',
     'recommendation_links',
     'maintenance_type_id',
     'maintenance_tier',
@@ -44,6 +45,7 @@ class Ticket extends Model
         return [
             'attachments'                => 'array',
             'estimated_price'            => 'integer',
+            'payment_amount'             => 'integer',
             'recommendation_links'       => 'array',
             'maintenance_deadline_days'  => 'integer',
             'completion_attachments'     => 'array',

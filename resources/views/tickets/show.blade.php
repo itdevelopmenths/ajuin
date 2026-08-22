@@ -69,6 +69,12 @@
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Sumber</div>
                     <div style="font-size:.8125rem;font-weight:500;color:#475569">{{ $ticket->source }}</div>
                 </div>
+                @if($ticket->payment_amount !== null)
+                <div>
+                    <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Nominal Pembayaran</div>
+                    <div style="font-size:.875rem;font-weight:700;color:#1e293b">Rp {{ number_format($ticket->payment_amount, 0, ',', '.') }}</div>
+                </div>
+                @endif
                 <div>
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Diajukan oleh</div>
                     <div style="font-size:.875rem;font-weight:600;color:#1e293b">{{ $ticket->submitted_by }}</div>
@@ -144,9 +150,21 @@
                             <label class="form-label" style="margin-bottom:.3rem">Catatan <span style="color:#94a3b8;font-weight:400" id="update-note-hint">(opsional)</span></label>
                             <textarea name="note" rows="3" class="form-input" placeholder="Tambahkan catatan status…"></textarea>
                         </div>
+                        <div id="payment-amount-field" style="display:none">
+                            <label class="form-label" style="margin-bottom:.3rem">Nominal Pembayaran <span style="color:#ef4444">*</span></label>
+                            <input type="number" name="payment_amount" id="payment-amount-input" min="0" step="1" class="form-input" placeholder="cth. 500000">
+                        </div>
                         <div id="completion-attachments-field" style="display:none">
-                            <label class="form-label" style="margin-bottom:.3rem">Bukti Selesai <span style="color:#ef4444">*</span> <span style="font-weight:400;color:#94a3b8">(foto, wajib min. 1 file)</span></label>
-                            <input type="file" name="completion_attachments[]" id="completion-attachments-input" accept=".jpg,.jpeg,.png" multiple class="form-input" style="padding:.5rem">
+                            <label class="form-label" style="margin-bottom:.3rem">Bukti Selesai <span style="color:#ef4444">*</span> <span style="font-weight:400;color:#94a3b8">(foto, wajib min. 1 file, bisa lebih dari satu)</span></label>
+                            <div class="file-zone" id="completion-file-zone" style="position:relative;border:2px dashed #e2e8f0;border-radius:.625rem;padding:1.25rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s">
+                                <input type="file" name="completion_attachments[]" id="completion-attachments-input" accept=".jpg,.jpeg,.png" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                                <div style="font-size:.8125rem;font-weight:600;color:#64748b">Klik atau seret foto ke sini</div>
+                                <div style="font-size:.75rem;color:#94a3b8;margin-top:.2rem">JPG/PNG, maks. 2 MB per file, maks. 5 file</div>
+                            </div>
+                            <div id="completion-file-list" style="margin-top:.5rem;display:none;flex-direction:column;gap:.5rem"></div>
+                            <button type="button" id="completion-add-more-btn" style="display:none;margin-top:.375rem;background:#fff;color:#111827;border:1.5px dashed #111827;border-radius:.625rem;padding:.5rem .875rem;font-size:.8125rem;font-weight:600;cursor:pointer;width:100%;text-align:center">
+                                + Tambah Foto Lainnya
+                            </button>
                         </div>
                         <button class="btn btn-primary" style="width:100%;justify-content:center">Update Status</button>
                     </form>
@@ -209,25 +227,103 @@
         const statusSelect = document.getElementById('update-status-select');
         const completionField = document.getElementById('completion-attachments-field');
         const completionInput = document.getElementById('completion-attachments-input');
+        const paymentField = document.getElementById('payment-amount-field');
+        const paymentInput = document.getElementById('payment-amount-input');
         const noteHint = document.getElementById('update-note-hint');
         if (!statusSelect) return;
 
-        function toggleCompletionField() {
+        function toggleFields() {
             const isCompleting = statusSelect.value === 'SELESAI';
             completionField.style.display = isCompleting ? 'block' : 'none';
             completionInput.required = isCompleting;
+
+            const isPaying = statusSelect.value === 'PEMBAYARAN';
+            paymentField.style.display = isPaying ? 'block' : 'none';
+            paymentInput.required = isPaying;
 
             const isRejecting = statusSelect.value === 'REJECTED';
             noteHint.textContent = isRejecting ? '(wajib untuk penolakan)' : '(opsional)';
         }
 
-        statusSelect.addEventListener('change', toggleCompletionField);
-        toggleCompletionField();
+        statusSelect.addEventListener('change', toggleFields);
+        toggleFields();
 
         document.getElementById('update-status-form').addEventListener('submit', function (e) {
             if (statusSelect.value === 'SELESAI' && (!completionInput.files || completionInput.files.length === 0)) {
                 e.preventDefault();
                 alert('Bukti selesai wajib diisi minimal 1 foto.');
+            }
+        });
+
+        /* ── Bukti selesai: multi-file zone, akumulasi antar seleksi ── */
+        const fileZone = document.getElementById('completion-file-zone');
+        const fileList = document.getElementById('completion-file-list');
+        const addMoreBtn = document.getElementById('completion-add-more-btn');
+        const MAX_FILES = 5;
+        let selectedFiles = [];
+
+        function renderFileList() {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(f => dt.items.add(f));
+            completionInput.files = dt.files;
+
+            fileList.innerHTML = '';
+
+            if (selectedFiles.length > 0) {
+                fileZone.style.display = 'none';
+                fileList.style.display = 'flex';
+
+                selectedFiles.forEach((f, index) => {
+                    const item = document.createElement('div');
+                    item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:#fff;border:1.5px solid #e2e8f0;border-radius:.5rem';
+                    item.innerHTML = `
+                        <span style="font-size:.8125rem;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px">${f.name}</span>
+                        <button type="button" class="completion-remove-btn" style="color:#ef4444;background:none;border:none;cursor:pointer;padding:.25rem" title="Hapus file">
+                            <svg style="width:16px;height:16px" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    `;
+                    item.querySelector('.completion-remove-btn').addEventListener('click', () => {
+                        selectedFiles.splice(index, 1);
+                        renderFileList();
+                    });
+                    fileList.appendChild(item);
+                });
+
+                addMoreBtn.style.display = selectedFiles.length < MAX_FILES ? 'block' : 'none';
+            } else {
+                fileZone.style.display = 'block';
+                fileList.style.display = 'none';
+                addMoreBtn.style.display = 'none';
+            }
+        }
+
+        completionInput.addEventListener('change', () => {
+            if (completionInput.files.length > 0) {
+                Array.from(completionInput.files).forEach(newFile => {
+                    const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
+                    if (!isDuplicate && selectedFiles.length < MAX_FILES) {
+                        selectedFiles.push(newFile);
+                    }
+                });
+            }
+            renderFileList();
+        });
+
+        addMoreBtn.addEventListener('click', () => completionInput.click());
+
+        fileZone.addEventListener('dragover', e => { e.preventDefault(); fileZone.style.borderColor = '#111827'; });
+        fileZone.addEventListener('dragleave', () => { fileZone.style.borderColor = ''; });
+        fileZone.addEventListener('drop', e => {
+            e.preventDefault();
+            fileZone.style.borderColor = '';
+            if (e.dataTransfer.files.length > 0) {
+                Array.from(e.dataTransfer.files).forEach(newFile => {
+                    const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
+                    if (!isDuplicate && selectedFiles.length < MAX_FILES) {
+                        selectedFiles.push(newFile);
+                    }
+                });
+                renderFileList();
             }
         });
     })();

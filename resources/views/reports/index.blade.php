@@ -75,6 +75,17 @@
         <div style="font-size:2.25rem;font-weight:800;color:#0f172a;letter-spacing:-.03em">{{ $avgLeadHours }}<span style="font-size:1rem;color:#64748b;font-weight:600">h</span></div>
         <div style="font-size:.75rem;color:#94a3b8;margin-top:.25rem">rata-rata penyelesaian</div>
     </div>
+
+    <div class="card card-lift" style="padding:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
+            <span style="font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em">Total Nominal Pembayaran</span>
+            <span class="stat-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182.553-.44 1.278-.659 2.003-.659.725 0 1.45.22 2.003.659l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+            </span>
+        </div>
+        <div style="font-size:1.625rem;font-weight:800;color:#0f172a;letter-spacing:-.03em">Rp {{ number_format($totalPaymentAmount, 0, ',', '.') }}</div>
+        <div style="font-size:.75rem;color:#94a3b8;margin-top:.25rem">akumulasi nominal ticket pembayaran</div>
+    </div>
 </div>
 
 {{-- Breakdown cards --}}

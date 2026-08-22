@@ -145,10 +145,12 @@ class TicketController extends Controller
 
         $nextStatuses = $this->allowedStatuses($request, $ticket);
         $isCompleting = $request->input('status') === 'SELESAI';
+        $isPaying = $request->input('status') === 'PEMBAYARAN';
 
         $data = $request->validate([
             'status' => ['required', Rule::in($nextStatuses)],
             'note'   => [Rule::requiredIf(fn () => $request->input('status') === 'REJECTED'), 'nullable', 'string'],
+            'payment_amount' => [Rule::requiredIf($isPaying), 'nullable', 'integer', 'min:0'],
             'completion_attachments'   => [Rule::requiredIf($isCompleting), 'array', 'min:1', 'max:5'],
             'completion_attachments.*' => ['file', 'mimes:jpg,jpeg,png', 'max:2048'],
         ]);
@@ -158,6 +160,10 @@ class TicketController extends Controller
             'handled_by'  => $request->user()->id,
             'resolved_at' => in_array($data['status'], Ticket::FINAL_STATUSES, true) ? now() : $ticket->resolved_at,
         ];
+
+        if ($isPaying) {
+            $ticketUpdate['payment_amount'] = $data['payment_amount'];
+        }
 
         if ($isCompleting) {
             $completionAttachments = [];
@@ -247,7 +253,10 @@ class TicketController extends Controller
         
         $spvInput = $request->input('spv_id');
         if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole('Super Admin')) {
-            $query->where(['handled_by' => $spvInput]);
+            $spvUser = User::find($spvInput);
+            if ($spvUser) {
+                $query->visibleTo($spvUser);
+            }
         }
         
         $fromInput = $request->input('from');

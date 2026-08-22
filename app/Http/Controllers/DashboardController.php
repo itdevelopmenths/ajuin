@@ -21,7 +21,10 @@ class DashboardController extends Controller
         }
         $spvFilter = $request->input('spv_id');
         if ($spvFilter !== null && $spvFilter !== '' && $request->user()->hasRole('Super Admin')) {
-            $base->where('handled_by', $spvFilter);
+            $spvUser = User::find($spvFilter);
+            if ($spvUser) {
+                $base->visibleTo($spvUser);
+            }
         }
 
         $storeList = Store::query()

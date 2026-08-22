@@ -55,6 +55,14 @@
 </div>
 @endif
 
+{{-- Filter --}}
+<div class="card" style="padding:1rem 1.25rem;margin-bottom:1rem">
+    <div style="max-width:320px">
+        <label style="display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:.3rem">Cari Lokasi</label>
+        <input type="search" id="stores-search" class="form-input" placeholder="Cari nama atau kode lokasi…" style="padding:.5rem .75rem;font-size:.8125rem">
+    </div>
+</div>
+
 {{-- DataTable --}}
 <div class="card" style="padding:1rem">
     <div style="overflow-x:auto">
@@ -76,7 +84,7 @@
 @push('scripts')
 <script>
 $(function () {
-    $('#stores-table').DataTable({
+    const table = $('#stores-table').DataTable({
         processing: true,
         serverSide: true,
         pageLength: 25,
@@ -96,6 +104,13 @@ $(function () {
             { data: 'created_at', name: 'created_at', width: '130px' },
             { data: 'actions',    orderable: false, searchable: false, width: '90px' }
         ]
+    });
+
+    let searchTimer;
+    $('#stores-search').on('input', function () {
+        clearTimeout(searchTimer);
+        const val = this.value;
+        searchTimer = setTimeout(() => table.search(val).draw(), 300);
     });
 });
 </script>

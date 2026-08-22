@@ -57,8 +57,13 @@ RUN mkdir -p /var/www/html/storage/framework/views \
     && mkdir -p /var/www/html/storage/framework/sessions \
     && mkdir -p /var/www/html/bootstrap/cache \
     && mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/storage/app/public \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Link public/storage -> storage/app/public so ticket attachments are servable
+# (must run at container start too, in case storage/ is mounted as a volume at runtime)
+RUN php artisan storage:link
+
 EXPOSE 80
-CMD ["apache2-foreground"]
+CMD ["sh", "-c", "php artisan storage:link --force && apache2-foreground"]

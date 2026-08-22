@@ -85,14 +85,42 @@ class AjuinSeeder extends Seeder
 
         // ── Tier & deadline maintenance ────────────────────────────
         $tierA = Tier::firstOrCreate(['name' => 'A'], ['deadline_days' => 3]);
-        Tier::firstOrCreate(['name' => 'B'], ['deadline_days' => 7]);
-        Tier::firstOrCreate(['name' => 'C'], ['deadline_days' => 14]);
+        $tierB = Tier::firstOrCreate(['name' => 'B'], ['deadline_days' => 7]);
+        $tierC = Tier::firstOrCreate(['name' => 'C'], ['deadline_days' => 14]);
 
         // ── Jenis Maintenance (berelasi ke tier) ───────────────────
-        MaintenanceType::firstOrCreate(
-            ['name' => 'Kerusakan Kaca'],
-            ['tier_id' => $tierA->id],
-        );
+        // Format: 'Nama Tier' => ['Jenis maintenance', ...]
+        $maintenanceTypesByTier = [
+            'A' => [
+                'Kaca display pecah',
+                'Logo / signage pecah',
+                'Logo / signage mati',
+                'Lampu display mati',
+            ],
+            'B' => [
+                'List akrilik pecah',
+                'HPL bolong',
+                'Finishing kaca retak',
+                'Engsel rusak',
+                'Pengunci kabinet rusak',
+            ],
+            'C' => [
+                'Penambahan storage',
+                'Penggantian wifi',
+                'Repaint interior karena kusam',
+                'Penambahan interior',
+            ],
+        ];
+
+        $tiersByName = ['A' => $tierA, 'B' => $tierB, 'C' => $tierC];
+        foreach ($maintenanceTypesByTier as $tierName => $typeNames) {
+            foreach ($typeNames as $typeName) {
+                MaintenanceType::firstOrCreate(
+                    ['name' => $typeName],
+                    ['tier_id' => $tiersByName[$tierName]->id],
+                );
+            }
+        }
 
         // ── Sample ticket ────────────────────────────────────────
         if (Ticket::query()->doesntExist()) {

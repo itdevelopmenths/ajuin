@@ -111,7 +111,7 @@
                 <tr style="background:#f8fafc">
                     <th style="padding:.75rem 1.5rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Nomor</th>
                     <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Toko</th>
-                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Pengurus</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Diajukan Oleh</th>
                     <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Status</th>
                     <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Deadline</th>
                     <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Dibuat</th>
@@ -127,7 +127,7 @@
                         <div style="font-size:.8125rem;font-weight:600;color:#1e293b">{{ $ticket->store?->name ?? '—' }}</div>
                         <div style="font-size:.75rem;color:#94a3b8;margin-top:1px">{{ $ticket->store?->code ?? '' }}</div>
                     </td>
-                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $ticket->handler?->name ?? '—' }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $ticket->submitted_by }}</td>
                     <td style="padding:.875rem 1rem"><span class="badge badge-{{ $ticket->status }}">{{ config('ajuin.statuses')[$ticket->status] }}</span></td>
                     <td style="padding:.875rem 1rem;font-size:.8125rem">
                         @include('tickets._deadline-badge', ['ticket' => $ticket])

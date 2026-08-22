@@ -27,11 +27,15 @@ class ReportController extends Controller
         }
         $spvInput = $request->input('spv_id');
         if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole('Super Admin')) {
-            $base->where(['handled_by' => $spvInput]);
+            $spvUser = User::find($spvInput);
+            if ($spvUser) {
+                $base->visibleTo($spvUser);
+            }
         }
 
         // Aggregate — tidak load semua record ke PHP
         $total = (clone $base)->count();
+        $totalPaymentAmount = (clone $base)->sum('payment_amount');
 
         $byStatus = (clone $base)
             ->selectRaw('status, count(*) as total')
@@ -81,7 +85,7 @@ class ReportController extends Controller
             : collect();
 
         return view('reports.index', compact(
-            'total', 'byStatus', 'byType', 'byStore', 'bySpv', 'avgLeadHours',
+            'total', 'totalPaymentAmount', 'byStatus', 'byType', 'byStore', 'bySpv', 'avgLeadHours',
             'storeList', 'spvUsers'
         ));
     }
