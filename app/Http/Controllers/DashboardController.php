@@ -36,6 +36,21 @@ class DashboardController extends Controller
             ? User::role(['SPV', 'HRGA', 'Keptok'])->orderBy(column: 'name')->get(['id', 'name'])
             : collect();
 
+        // Ticket maintenance aktif yang mendekati (≤24 jam lagi) atau sudah melewati deadline
+        $activeMaintenanceTickets = (clone $base)
+            ->whereNotNull('maintenance_deadline_days')
+            ->whereNotIn('status', Ticket::FINAL_STATUSES)
+            ->with('store')
+            ->get();
+
+        $deadlineTickets = $activeMaintenanceTickets
+            ->filter(fn (Ticket $t) => in_array($t->maintenanceDeadlineStatus(), ['soon', 'overdue'], true))
+            ->sortBy(fn (Ticket $t) => $t->maintenanceDeadlineAt())
+            ->values();
+
+        $deadlineSoonCount = $deadlineTickets->filter(fn (Ticket $t) => $t->maintenanceDeadlineStatus() === 'soon')->count();
+        $deadlineOverdueCount = $deadlineTickets->filter(fn (Ticket $t) => $t->maintenanceDeadlineStatus() === 'overdue')->count();
+
         return view('dashboard', [
             'totalToday'   => (clone $base)->whereDate('created_at', today())->count(),
             'totalMonth'   => (clone $base)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
@@ -43,6 +58,9 @@ class DashboardController extends Controller
             'recentTickets' => (clone $base)->with('store')->latest()->limit(10)->get(),
             'stores'       => $storeList,
             'spvUsers'     => $spvUsers,
+            'deadlineTickets'      => $deadlineTickets,
+            'deadlineSoonCount'    => $deadlineSoonCount,
+            'deadlineOverdueCount' => $deadlineOverdueCount,
         ]);
     }
 }

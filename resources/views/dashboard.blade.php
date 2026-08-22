@@ -94,6 +94,65 @@
     </div>
 </div>
 
+{{-- Deadline tracking --}}
+<div class="card" style="padding:1.5rem;margin-bottom:1rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem">
+        <div>
+            <h2 style="font-size:1rem;font-weight:700;color:#0f172a">Menuju Deadline Maintenance</h2>
+            <p style="font-size:.8125rem;color:#64748b;margin-top:.125rem">Ticket maintenance aktif yang mendekati atau sudah melewati batas waktu.</p>
+        </div>
+        <div style="display:flex;gap:.625rem;flex-wrap:wrap">
+            <span style="display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .75rem;border-radius:999px;background:#fef3c7;color:#92400e;font-size:.8125rem;font-weight:700">
+                <span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>
+                {{ $deadlineSoonCount }} Segera
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:.375rem;padding:.375rem .75rem;border-radius:999px;background:#fee2e2;color:#b91c1c;font-size:.8125rem;font-weight:700">
+                <span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>
+                {{ $deadlineOverdueCount }} Terlambat
+            </span>
+        </div>
+    </div>
+
+    @if($deadlineTickets->isEmpty())
+    <div style="text-align:center;padding:2rem 0;color:#94a3b8;font-size:.875rem">
+        <svg style="width:32px;height:32px;margin:0 auto .75rem;color:#e2e8f0;display:block" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        Tidak ada ticket yang mendekati atau melewati deadline.
+    </div>
+    @else
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr style="background:#f8fafc">
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Nomor</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Toko</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Tier</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Status</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Deadline</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach($deadlineTickets as $ticket)
+                <tr style="border-bottom:1px solid #f1f5f9;transition:background .15s" onmouseover="this.style.background='#fafbff'" onmouseout="this.style.background=''">
+                    <td style="padding:.875rem 1rem">
+                        <a href="{{ route('tickets.show', $ticket) }}" style="font-weight:700;color:#111827;text-decoration:none;font-size:.8125rem;font-family:monospace">{{ $ticket->ticket_number }}</a>
+                    </td>
+                    <td style="padding:.875rem 1rem">
+                        <div style="font-size:.8125rem;font-weight:600;color:#1e293b">{{ $ticket->store?->name ?? '—' }}</div>
+                        <div style="font-size:.75rem;color:#94a3b8;margin-top:1px">{{ $ticket->store?->code ?? '' }}</div>
+                    </td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">Tier {{ $ticket->maintenance_tier }}</td>
+                    <td style="padding:.875rem 1rem"><span class="badge badge-{{ $ticket->status }}">{{ config('ajuin.statuses')[$ticket->status] }}</span></td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem">
+                        @include('tickets._deadline-badge', ['ticket' => $ticket])
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
+</div>
+
 {{-- Recent tickets --}}
 <div class="card" style="overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #f1f5f9">
