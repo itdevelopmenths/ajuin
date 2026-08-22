@@ -97,7 +97,7 @@ class UserController extends Controller
 
     /**
      * Sync role dan scope toko untuk user.
-     * Scope type hanya ALL (Super Admin) atau STORE (SPV).
+     * Scope type hanya ALL (Super Admin, Chief) atau STORE (SPV, dll).
      */
     private function syncAccess(Request $request, User $user): void
     {
@@ -107,7 +107,7 @@ class UserController extends Controller
 
         $storeIds = $request->input('store_ids', []);
 
-        if ($user->hasRole('Super Admin')) {
+        if ($user->hasRole(['Super Admin', 'Chief'])) {
             $user->scopes()->create(['scope_type' => 'ALL', 'store_id' => null]);
         } elseif (! empty($storeIds)) {
             foreach ($storeIds as $storeId) {

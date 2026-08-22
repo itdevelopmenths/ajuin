@@ -17,8 +17,9 @@ class RoleController extends Controller
      * Hanya Keptok (dan Super Admin) yang boleh membuat/menambah tiket.
      */
     private const RESTRICTED_ROLE_PERMISSIONS = [
-        'SPV'  => ['ticket.create'],
-        'HRGA' => ['ticket.create'],
+        'SPV'   => ['ticket.create'],
+        'HRGA'  => ['ticket.create'],
+        'Chief' => ['ticket.create'],
     ];
 
     private function filterPermissions(string $roleName, array $permissions): array

@@ -26,7 +26,7 @@ class ReportController extends Controller
             $base->where(['store_id' => $storeInput]);
         }
         $spvInput = $request->input('spv_id');
-        if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole('Super Admin')) {
+        if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole(['Super Admin', 'Chief'])) {
             $spvUser = User::find($spvInput);
             if ($spvUser) {
                 $base->visibleTo($spvUser);
@@ -47,10 +47,10 @@ class ReportController extends Controller
             ->groupBy('type')
             ->pluck('total', 'type');
 
-        // Grouping by Toko — minimal columns
+        // Satu kali fetch, dipakai untuk semua breakdown (toko, SPV, lead time)
         $ticketsMin = (clone $base)
-            ->with(['store:id,name'])
-            ->select(['id', 'store_id', 'created_at', 'resolved_at'])
+            ->with(['store:id,name,code'])
+            ->select(['id', 'store_id', 'handled_by', 'status', 'created_at', 'resolved_at', 'maintenance_deadline_days'])
             ->get();
 
         $byStore = $ticketsMin
@@ -73,6 +73,58 @@ class ReportController extends Controller
             1
         );
 
+        // ── Statistik detail per Toko ───────────────────────────────
+        $storeStats = $ticketsMin
+            ->whereNotNull('store_id')
+            ->groupBy('store_id')
+            ->map(function ($tickets) {
+                $resolved = $tickets->whereNotNull('resolved_at');
+
+                return [
+                    'store'          => $tickets->first()->store,
+                    'total'          => $tickets->count(),
+                    'selesai'        => $tickets->where('status', 'SELESAI')->count(),
+                    'proses'         => $tickets->whereNotIn('status', Ticket::FINAL_STATUSES)->count(),
+                    'ditolak'        => $tickets->where('status', 'REJECTED')->count(),
+                    'overdue'        => $tickets->filter(fn (Ticket $t) => $t->isMaintenanceOverdue())->count(),
+                    'avg_lead_hours' => $resolved->isNotEmpty()
+                        ? round($resolved->avg(fn (Ticket $t) => $t->created_at->diffInHours($t->resolved_at)), 1)
+                        : null,
+                ];
+            })
+            ->filter(fn (array $row) => $row['store'] !== null)
+            ->sortByDesc('total')
+            ->values();
+
+        // ── Statistik detail per SPV/Pengurus (via handled_by) ──────
+        $handlerIds = $ticketsMin->pluck('handled_by')->filter()->unique()->values();
+        $handlers = User::query()
+            ->whereIn('id', $handlerIds)
+            ->withCount('stores')
+            ->with('roles:id,name')
+            ->get()
+            ->keyBy('id');
+
+        $spvStats = $ticketsMin
+            ->whereNotNull('handled_by')
+            ->groupBy('handled_by')
+            ->map(function ($tickets, $handledBy) use ($handlers) {
+                $resolved = $tickets->whereNotNull('resolved_at');
+
+                return [
+                    'handler'        => $handlers->get((int) $handledBy),
+                    'total'          => $tickets->count(),
+                    'selesai'        => $tickets->where('status', 'SELESAI')->count(),
+                    'proses'         => $tickets->whereNotIn('status', Ticket::FINAL_STATUSES)->count(),
+                    'avg_lead_hours' => $resolved->isNotEmpty()
+                        ? round($resolved->avg(fn (Ticket $t) => $t->created_at->diffInHours($t->resolved_at)), 1)
+                        : null,
+                ];
+            })
+            ->filter(fn (array $row) => $row['handler'] !== null)
+            ->sortByDesc('total')
+            ->values();
+
         // orderBy melalui variable — IDE tidak menganggap string sebagai callable
         $sortByName = 'name';
         $storeList = Store::query()
@@ -80,13 +132,13 @@ class ReportController extends Controller
             ->orderBy($sortByName)
             ->get(['id', 'name', 'code']);
 
-        $spvUsers = $request->user()->hasRole('Super Admin')
+        $spvUsers = $request->user()->hasRole(['Super Admin', 'Chief'])
             ? User::role(['SPV', 'HRGA', 'Keptok'])->orderBy($sortByName)->get(['id', 'name'])
             : collect();
 
         return view('reports.index', compact(
             'total', 'totalPaymentAmount', 'byStatus', 'byType', 'byStore', 'bySpv', 'avgLeadHours',
-            'storeList', 'spvUsers'
+            'storeStats', 'spvStats', 'storeList', 'spvUsers'
         ));
     }
 }

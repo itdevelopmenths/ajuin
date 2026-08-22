@@ -252,7 +252,7 @@ class TicketController extends Controller
         }
         
         $spvInput = $request->input('spv_id');
-        if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole('Super Admin')) {
+        if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole(['Super Admin', 'Chief'])) {
             $spvUser = User::find($spvInput);
             if ($spvUser) {
                 $query->visibleTo($spvUser);
@@ -289,7 +289,7 @@ class TicketController extends Controller
      */
     private function spvUsers(Request $request)
     {
-        if (! $request->user()->hasRole('Super Admin')) {
+        if (! $request->user()->hasRole(['Super Admin', 'Chief'])) {
             return collect();
         }
 

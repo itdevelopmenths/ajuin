@@ -181,6 +181,99 @@
     </div>
 </div>
 
+{{-- Statistik detail per Toko --}}
+<div class="card" style="padding:1.5rem;margin-top:1rem">
+    <div style="margin-bottom:1.25rem">
+        <h2 style="font-size:1rem;font-weight:700;color:#0f172a">Statistik per Toko</h2>
+        <p style="font-size:.8125rem;color:#64748b;margin-top:.125rem">Volume, status, dan lead time tiap toko pada periode yang difilter.</p>
+    </div>
+    @if($storeStats->isEmpty())
+    <p style="font-size:.8125rem;color:#94a3b8">Belum ada data pada periode ini.</p>
+    @else
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr style="background:#f8fafc">
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Toko</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Total</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Selesai</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Proses</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Ditolak</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Overdue</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Avg Lead Time</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach($storeStats as $row)
+                <tr style="border-bottom:1px solid #f1f5f9">
+                    <td style="padding:.875rem 1rem">
+                        <div style="font-size:.8125rem;font-weight:600;color:#1e293b">{{ $row['store']->name }}</div>
+                        <div style="font-size:.75rem;color:#94a3b8;margin-top:1px">{{ $row['store']->code }}</div>
+                    </td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;font-weight:700;color:#1e293b">{{ $row['total'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['selesai'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['proses'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['ditolak'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem">
+                        @if($row['overdue'] > 0)
+                            <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;font-weight:700;padding:.2rem .625rem;border-radius:999px;background:#fee2e2;color:#b91c1c">{{ $row['overdue'] }}</span>
+                        @else
+                            <span style="color:#cbd5e1">0</span>
+                        @endif
+                    </td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">
+                        {{ $row['avg_lead_hours'] !== null ? $row['avg_lead_hours'] . ' j' : '—' }}
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
+</div>
+
+{{-- Statistik detail per SPV/Pengurus --}}
+<div class="card" style="padding:1.5rem;margin-top:1rem">
+    <div style="margin-bottom:1.25rem">
+        <h2 style="font-size:1rem;font-weight:700;color:#0f172a">Statistik per Pengurus (SPV)</h2>
+        <p style="font-size:.8125rem;color:#64748b;margin-top:.125rem">Beban kerja dan performa tiap pengurus berdasarkan ticket yang ditangani.</p>
+    </div>
+    @if($spvStats->isEmpty())
+    <p style="font-size:.8125rem;color:#94a3b8">Belum ada ticket yang ditangani pada periode ini.</p>
+    @else
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr style="background:#f8fafc">
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Pengurus</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Role</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Toko Diampu</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Total Ditangani</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Selesai</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Proses</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Avg Lead Time</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach($spvStats as $row)
+                <tr style="border-bottom:1px solid #f1f5f9">
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;font-weight:600;color:#1e293b">{{ $row['handler']->name }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.75rem;color:#64748b">{{ $row['handler']->roles->pluck('name')->join(', ') ?: '—' }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['handler']->stores_count }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;font-weight:700;color:#1e293b">{{ $row['total'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['selesai'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['proses'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">
+                        {{ $row['avg_lead_hours'] !== null ? $row['avg_lead_hours'] . ' j' : '—' }}
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+    @endif
+</div>
+
 @push('scripts')
 <script>
     $(function () {

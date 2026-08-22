@@ -94,6 +94,50 @@
     </div>
 </div>
 
+{{-- SLA per kategori (Tier): target vs aktual rata-rata penyelesaian --}}
+@if($slaByTier->isNotEmpty())
+<div class="card" style="padding:1.5rem;margin-bottom:1rem">
+    <div style="margin-bottom:1.25rem">
+        <h2 style="font-size:1rem;font-weight:700;color:#0f172a">SLA per Kategori</h2>
+        <p style="font-size:.8125rem;color:#64748b;margin-top:.125rem">Target penyelesaian per tier vs rata-rata aktual, berdasarkan ticket maintenance yang sudah selesai.</p>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr style="background:#f8fafc">
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Kategori</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Target</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Aktual (rata-rata)</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Ticket Selesai</th>
+                    <th style="padding:.75rem 1rem;text-align:left;font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach($slaByTier as $row)
+                <tr style="border-bottom:1px solid #f1f5f9">
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;font-weight:700;color:#1e293b">Tier {{ $row['tier'] }}</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['target_days'] }} hari</td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">
+                        {{ $row['actual_days'] !== null ? rtrim(rtrim(number_format($row['actual_days'], 1), '0'), '.') . ' hari' : '—' }}
+                    </td>
+                    <td style="padding:.875rem 1rem;font-size:.8125rem;color:#64748b">{{ $row['count'] }}</td>
+                    <td style="padding:.875rem 1rem">
+                        @if($row['is_safe'] === null)
+                            <span style="color:#cbd5e1;font-size:.8125rem">Belum ada data</span>
+                        @elseif($row['is_safe'])
+                            <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;font-weight:700;padding:.2rem .625rem;border-radius:999px;background:#dcfce7;color:#15803d">Aman</span>
+                        @else
+                            <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;font-weight:700;padding:.2rem .625rem;border-radius:999px;background:#fee2e2;color:#b91c1c">Tidak Aman</span>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 {{-- Deadline tracking --}}
 <div class="card" style="padding:1.5rem;margin-bottom:1rem">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem">
