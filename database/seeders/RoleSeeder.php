@@ -40,6 +40,14 @@ class RoleSeeder extends Seeder
                 'ticket.export',
                 'report.view',
             ],
+            'Manager'     => [
+                'ticket.view',
+                'report.view',
+                'user.view',
+                'store.view',
+                'maintenance_type.view',
+                'role.view',
+            ],
         ];
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

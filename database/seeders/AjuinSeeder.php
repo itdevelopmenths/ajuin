@@ -87,7 +87,7 @@ class AjuinSeeder extends Seeder
             'Margo City'               => 'margocityheavenscent@gmail.com',
             'Karawang Central Park'    => 'heavenscentkcpkarawang@gmail.com',
             'Resinda Mall'             => 'heavenscentresindamall@gmail.com',
-            'TSM Cibubur'              => 'heavenscentsmcibubur@gmail.com',
+            'TSM Cibubur'              => 'heavenscenttsmcibubur@gmail.com',
             'Tangerang City Mall'      => 'tangerangcityheavenscent@gmail.com',
             'Cibinong City Mall'       => 'heavenscentcibinongmall@gmail.com',
             'Grand Metropolitan'       => 'heavenscentgrandmetropolitan@gmail.com',
@@ -129,12 +129,25 @@ class AjuinSeeder extends Seeder
                 $store->update(['name' => $storeName]);
             }
 
-            // Akun Keptok (kepala toko): satu per toko, login pakai email toko
-            /** @var User $keptok */
-            $keptok = User::firstOrCreate(
-                ['email' => $keptokEmail],
-                ['name' => 'Keptok ' . $storeName, 'password' => Hash::make('password'), 'is_active' => true],
-            );
+            // Akun Keptok (kepala toko): satu per toko. Dicari lewat scope toko (bukan email),
+            // supaya perbaikan/typo email toko meng-update akun yang sama, bukan bikin akun baru.
+            /** @var User|null $keptok */
+            $keptok = User::role('Keptok')
+                ->whereHas('scopes', fn ($q) => $q->where('scope_type', 'STORE')->where('store_id', $store->id))
+                ->first();
+
+            if ($keptok) {
+                if ($keptok->email !== $keptokEmail) {
+                    $keptok->update(['email' => $keptokEmail]);
+                }
+            } else {
+                $keptok = User::firstOrCreate(
+                    ['email' => $keptokEmail],
+                    ['name' => 'Keptok ' . $storeName, 'password' => Hash::make('password'), 'is_active' => true],
+                );
+            }
+
+            $keptok->forceFill(['name' => 'Keptok ' . $storeName])->save();
             $keptok->syncRoles(['Keptok']);
             $keptok->scopes()->delete();
             $keptok->scopes()->create(['scope_type' => 'STORE', 'store_id' => $store->id]);
@@ -142,36 +155,23 @@ class AjuinSeeder extends Seeder
         }
 
         // ── Struktur wilayah (sumber: sheet "formasi abk" — Kuota HRGA Provinsi) ──
-        // Region → SPV pemegang + daftar toko (nama toko merujuk master $stores di atas).
+        // Region → SPV pemegang (nama + email login) + daftar toko (nama toko merujuk master $stores di atas).
         // GA/HRGA di-assign per Region (mengikuti granularity kolom Region di Excel).
+        // Catatan: grouping akun SPV di bawah dilakukan per spv_email (bukan nama) — beberapa region
+        // dengan spv_email yang sama (mis. Jatim 1 & Jatim 3, sama-sama Meme) otomatis digabung jadi satu akun.
         $regions = [
-            'Jatim 1'  => ['spv' => 'Meme',    'stores' => ['Tunjungan Plaza', 'Suncity Sidoarjo', 'Mall Olympic Garden', 'Lippo Batu', 'Kediri Town Square', 'Kediri Mall']],
-            'Jatim 3'  => ['spv' => 'Meme',    'stores' => ['BG Junction', 'Unimas District']],
-            'Jatim 2'  => ['spv' => 'Via',     'stores' => ['Malang Town Square', 'Malang City Point', 'Royal', 'Pakuwon Trade Center', 'Gresik Mall', 'Food Junction', 'Sunrise Mojokerto', 'Lippo Jember']],
-            'Jateng 1' => ['spv' => 'Dewi',    'stores' => ['Suncity Madiun', 'Solo Square', 'Pakuwon Mall Solo', 'The Park Solo', 'Jogja City Mall', 'Plaza Malioboro', 'Plaza Ambarrukmo', 'Sleman City Hall']],
-            'Jateng 2' => ['spv' => 'Nadea',   'stores' => ['Artos Magelang', 'Paragon Semarang', 'The Park Semarang', 'Ciputra Semarang', 'Rita Purwokerto', '23 Semarang', 'Lippo Pekalongan', 'Pacific Mall Tegal']],
-            'Jabar 1'  => ['spv' => 'Manda',   'stores' => ['CSB Mall', 'Grage Mall', 'Jatinangor Town Square', 'Asia Plaza Sumedang', 'TSM Bandung', 'Ciwalk Bandung', 'Summarecon Bandung']],
-            'Jabar 2'  => ['spv' => 'Marham',  'stores' => ['Citylink Bandung', 'Bandung Indah Plaza', "D'Botanica Bandung", 'The Kings Bandung', 'Citimall Garut', 'Ciplaz Garut', 'Karawang Central Park', 'Resinda Mall']],
-            'Jabo 1'   => ['spv' => 'Lilis',   'stores' => ['Cibinong City Mall', 'LW Kota Wisata', 'LW Grand Wisata', 'Grand Galaxy Park', 'Grand Metropolitan', 'Metropolitan Mall Bekasi', 'Lippo Kramat Jati', 'Botani Square']],
-            'Jabo 2'   => ['spv' => 'Silvy',   'stores' => ['Gandaria City', 'FX Sudirman', 'Tangerang City Mall', 'Green Pramuka Square', 'Margo City', 'Mall Of Serang', 'Lippo Cikarang', 'Mall Bassura', 'LW Alam Sutera']],
-            'Jabo 3'   => ['spv' => 'Ayu',     'stores' => ['Lippo Ekalokasari Bogor', 'TSM Cibubur', 'Ciputra Cibubur', 'Lippo Kemang', 'Mal Artha Gading', 'Puri Indah Mall', 'Lippo Mall Puri', 'Green Sedayu Mall', 'The Park Sawangan']],
-            'Bali'     => ['spv' => 'Angeline','stores' => ['TSM Bali', 'Discovery Mall Bali', 'Level 21 Bali', 'LW Denpasar']],
-            'Medan'    => ['spv' => 'Yoga',    'stores' => ['Manhattan Mall Medan', 'Delipark Mall Medan', 'Centre Park Medan', 'Plaza Medan Fair']],
-        ];
-
-        // Email SPV (dari daftar email yang diberikan). Yoga belum ada email → placeholder.
-        $spvEmails = [
-            'Meme'     => 'supervisormeme30@gmail.com',
-            'Via'      => 'supervisorvia559@gmail.com',
-            'Dewi'     => 'supervisordewi@gmail.com',
-            'Nadea'    => 'supervisornadea@gmail.com',
-            'Manda'    => 'supervisormanda@gmail.com',
-            'Marham'   => 'supervisormarham@gmail.com',
-            'Lilis'    => 'lilissupervisor@gmail.com',
-            'Silvy'    => 'spvhsjabodetabek2@gmail.com',
-            'Ayu'      => 'spvhsjabodetabek3@gmail.com',
-            'Angeline' => 'spvheavenscentbali@gmail.com',
-            'Yoga'     => 'spv.yoga@ajuin.test',
+            'Jatim 1'  => ['spv' => 'Meme',     'spv_email' => 'supervisormeme30@gmail.com',   'stores' => ['Tunjungan Plaza', 'Suncity Sidoarjo', 'Mall Olympic Garden', 'Lippo Batu', 'Kediri Town Square', 'Kediri Mall']],
+            'Jatim 3'  => ['spv' => 'Meme',      'spv_email' => 'supervisormeme30@gmail.com',   'stores' => ['BG Junction', 'Unimas District']],
+            'Jatim 2'  => ['spv' => 'Via',       'spv_email' => 'supervisorvia559@gmail.com',   'stores' => ['Malang Town Square', 'Malang City Point', 'Royal', 'Pakuwon Trade Center', 'Gresik Mall', 'Food Junction', 'Sunrise Mojokerto', 'Lippo Jember']],
+            'Jateng 1' => ['spv' => 'Dewi',      'spv_email' => 'supervisordewi@gmail.com',     'stores' => ['Suncity Madiun', 'Solo Square', 'Pakuwon Mall Solo', 'The Park Solo', 'Jogja City Mall', 'Plaza Malioboro', 'Plaza Ambarrukmo', 'Sleman City Hall']],
+            'Jateng 2' => ['spv' => 'Nadea',     'spv_email' => 'supervisornadea@gmail.com',    'stores' => ['Artos Magelang', 'Paragon Semarang', 'The Park Semarang', 'Ciputra Semarang', 'Rita Purwokerto', '23 Semarang', 'Lippo Pekalongan', 'Pacific Mall Tegal']],
+            'Jabar 1'  => ['spv' => 'Manda',     'spv_email' => 'supervisormanda@gmail.com',    'stores' => ['CSB Mall', 'Grage Mall', 'Jatinangor Town Square', 'Asia Plaza Sumedang', 'TSM Bandung', 'Ciwalk Bandung', 'Summarecon Bandung']],
+            'Jabar 2'  => ['spv' => 'Marham',    'spv_email' => 'supervisormarham@gmail.com',   'stores' => ['Citylink Bandung', 'Bandung Indah Plaza', "D'Botanica Bandung", 'The Kings Bandung', 'Citimall Garut', 'Ciplaz Garut', 'Karawang Central Park', 'Resinda Mall']],
+            'Jabo 1'   => ['spv' => 'Lilis',     'spv_email' => 'lilissupervisor@gmail.com',    'stores' => ['Cibinong City Mall', 'LW Kota Wisata', 'LW Grand Wisata', 'Grand Galaxy Park', 'Grand Metropolitan', 'Metropolitan Mall Bekasi', 'Lippo Kramat Jati', 'Botani Square']],
+            'Jabo 2'   => ['spv' => 'Silvy',     'spv_email' => 'spvhsjabodetabek2@gmail.com',  'stores' => ['Gandaria City', 'FX Sudirman', 'Tangerang City Mall', 'Green Pramuka Square', 'Margo City', 'Mall Of Serang', 'Lippo Cikarang', 'Mall Bassura', 'LW Alam Sutera']],
+            'Jabo 3'   => ['spv' => 'Ayu',       'spv_email' => 'spvhsjabodetabek3@gmail.com',  'stores' => ['Lippo Ekalokasari Bogor', 'TSM Cibubur', 'Ciputra Cibubur', 'Lippo Kemang', 'Mal Artha Gading', 'Puri Indah Mall', 'Lippo Mall Puri', 'Green Sedayu Mall', 'The Park Sawangan']],
+            'Bali'     => ['spv' => 'Angeline',  'spv_email' => 'spvheavenscentbali@gmail.com', 'stores' => ['TSM Bali', 'Discovery Mall Bali', 'Level 21 Bali', 'LW Denpasar']],
+            'Medan'    => ['spv' => null,        'spv_email' => null,                            'stores' => ['Manhattan Mall Medan', 'Delipark Mall Medan', 'Centre Park Medan', 'Plaza Medan Fair']],
         ];
 
         // ── GA / HRGA (sumber: sheet "September" kolom GA) ────────
@@ -205,17 +205,24 @@ class AjuinSeeder extends Seeder
             $ga->stores()->sync($storeIds->all());
         }
 
-        // ── SPV: gabungkan toko dari semua region yang dipegang SPV yang sama ──
-        $spvStores = [];
+        // ── SPV: gabungkan toko dari semua region yang pakai email SPV yang sama ──
+        // (dikelompokkan per email, bukan per nama, jaga-jaga bila suatu saat satu orang
+        // punya lebih dari satu akun/email login untuk region berbeda.)
+        $spvStoresByEmail = [];
+        $spvNameByEmail = [];
         foreach ($regions as $info) {
-            $spvStores[$info['spv']] = array_merge($spvStores[$info['spv']] ?? [], $info['stores']);
+            if ($info['spv_email'] === null) {
+                continue;
+            }
+            $spvStoresByEmail[$info['spv_email']] = array_merge($spvStoresByEmail[$info['spv_email']] ?? [], $info['stores']);
+            $spvNameByEmail[$info['spv_email']] = $info['spv'];
         }
 
-        foreach ($spvStores as $spvName => $storeNames) {
+        foreach ($spvStoresByEmail as $spvEmail => $storeNames) {
             /** @var User $spvUser */
             $spvUser = User::firstOrCreate(
-                ['email' => $spvEmails[$spvName] ?? 'spv.' . Str::slug($spvName) . '@ajuin.test'],
-                ['name' => 'SPV ' . $spvName, 'password' => Hash::make('password'), 'is_active' => true],
+                ['email' => $spvEmail],
+                ['name' => 'SPV ' . $spvNameByEmail[$spvEmail], 'password' => Hash::make('password'), 'is_active' => true],
             );
             $spvUser->syncRoles(['SPV']);
 
@@ -235,6 +242,30 @@ class AjuinSeeder extends Seeder
         );
         $admin->syncRoles(['Super Admin']);
         $admin->scopes()->updateOrCreate(
+            ['scope_type' => 'ALL'],
+            ['store_id' => null]
+        );
+
+        // ── Chief ────────────────────────────────────────────────
+        /** @var User $chief */
+        $chief = User::firstOrCreate(
+            ['email' => 'calvinheavenscent@gmail.com'],
+            ['name' => 'Calvin', 'password' => Hash::make('password'), 'is_active' => true],
+        );
+        $chief->syncRoles(['Chief']);
+        $chief->scopes()->updateOrCreate(
+            ['scope_type' => 'ALL'],
+            ['store_id' => null]
+        );
+
+        // ── Manager ──────────────────────────────────────────────
+        /** @var User $manager */
+        $manager = User::firstOrCreate(
+            ['email' => 'rachgilang169@gmail.com'],
+            ['name' => 'Rach Gilang', 'password' => Hash::make('password'), 'is_active' => true],
+        );
+        $manager->syncRoles(['Manager']);
+        $manager->scopes()->updateOrCreate(
             ['scope_type' => 'ALL'],
             ['store_id' => null]
         );

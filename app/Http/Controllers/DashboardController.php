@@ -21,7 +21,7 @@ class DashboardController extends Controller
             $base->where('store_id', $storeFilter);
         }
         $spvFilter = $request->input('spv_id');
-        if ($spvFilter !== null && $spvFilter !== '' && $request->user()->hasRole(['Super Admin', 'Chief'])) {
+        if ($spvFilter !== null && $spvFilter !== '' && $request->user()->hasRole(['Super Admin', 'Chief', 'Manager'])) {
             $spvUser = User::find($spvFilter);
             if ($spvUser) {
                 $base->visibleTo($spvUser);
@@ -33,7 +33,7 @@ class DashboardController extends Controller
             ->orderBy(column: 'name')
             ->get(['id', 'name', 'code']);
 
-        $spvUsers = $request->user()->hasRole(['Super Admin', 'Chief'])
+        $spvUsers = $request->user()->hasRole(['Super Admin', 'Chief', 'Manager'])
             ? User::role(['SPV', 'HRGA', 'Keptok'])->orderBy(column: 'name')->get(['id', 'name'])
             : collect();
 

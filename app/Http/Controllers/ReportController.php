@@ -26,7 +26,7 @@ class ReportController extends Controller
             $base->where(['store_id' => $storeInput]);
         }
         $spvInput = $request->input('spv_id');
-        if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole(['Super Admin', 'Chief'])) {
+        if ($spvInput !== null && $spvInput !== '' && $request->user()->hasRole(['Super Admin', 'Chief', 'Manager'])) {
             $spvUser = User::find($spvInput);
             if ($spvUser) {
                 $base->visibleTo($spvUser);
@@ -132,7 +132,7 @@ class ReportController extends Controller
             ->orderBy($sortByName)
             ->get(['id', 'name', 'code']);
 
-        $spvUsers = $request->user()->hasRole(['Super Admin', 'Chief'])
+        $spvUsers = $request->user()->hasRole(['Super Admin', 'Chief', 'Manager'])
             ? User::role(['SPV', 'HRGA', 'Keptok'])->orderBy($sortByName)->get(['id', 'name'])
             : collect();
 

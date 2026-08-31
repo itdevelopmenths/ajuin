@@ -22,6 +22,7 @@
 
 {{-- ═══ Tier ═══ --}}
 <p class="eyebrow" style="margin-bottom:.5rem">1. Tier &amp; Deadline</p>
+@can('maintenance_type.manage')
 <div class="card" style="padding:1.25rem;margin-bottom:1rem">
     <h2 style="font-size:.875rem;font-weight:700;color:#0f172a;margin-bottom:1rem">Tambah Tier</h2>
     <form method="POST" action="{{ route('admin.tiers.store') }}"
@@ -45,6 +46,7 @@
         </div>
     </form>
 </div>
+@endcan
 
 <div class="card" style="padding:1rem;margin-bottom:1.5rem">
     @if($tiers->isEmpty())
@@ -53,6 +55,7 @@
     <div style="display:flex;flex-direction:column;gap:.75rem">
         @foreach($tiers as $tier)
         <div class="tier-row-grid" style="display:grid;grid-template-columns:1fr;gap:.75rem;align-items:center;padding:.75rem;border:1px solid #f1f5f9;border-radius:.625rem">
+            @can('maintenance_type.manage')
             <form method="POST" action="{{ route('admin.tiers.update', $tier) }}" style="display:contents">
                 @csrf @method('PUT')
                 <input name="name" value="{{ $tier->name }}" class="form-input" required>
@@ -66,6 +69,10 @@
                     Hapus
                 </button>
             </form>
+            @else
+            <span style="font-weight:600">{{ $tier->name }}</span>
+            <span>{{ $tier->deadline_days }} hari</span>
+            @endcan
         </div>
         @endforeach
     </div>
@@ -74,6 +81,7 @@
 
 {{-- ═══ Jenis Maintenance ═══ --}}
 <p class="eyebrow" style="margin-bottom:.5rem">2. Jenis Maintenance</p>
+@can('maintenance_type.manage')
 <div class="card" style="padding:1.25rem;margin-bottom:1rem">
     <h2 style="font-size:.875rem;font-weight:700;color:#0f172a;margin-bottom:1rem">Tambah Jenis Maintenance</h2>
     @if($tiers->isEmpty())
@@ -106,6 +114,7 @@
     </form>
     @endif
 </div>
+@endcan
 
 <div class="card" style="padding:1rem">
     @if($maintenanceTypes->isEmpty())
@@ -114,6 +123,7 @@
     <div style="display:flex;flex-direction:column;gap:.75rem">
         @foreach($maintenanceTypes as $item)
         <div class="mt-row-grid" style="display:grid;grid-template-columns:1fr;gap:.75rem;align-items:center;padding:.75rem;border:1px solid #f1f5f9;border-radius:.625rem">
+            @can('maintenance_type.manage')
             <form method="POST" action="{{ route('admin.maintenance-types.update', $item) }}" style="display:contents">
                 @csrf @method('PUT')
                 <input name="name" value="{{ $item->name }}" class="form-input" required>
@@ -131,6 +141,10 @@
                     Hapus
                 </button>
             </form>
+            @else
+            <span style="font-weight:600">{{ $item->name }}</span>
+            <span>Tier {{ $item->tier?->name }}</span>
+            @endcan
         </div>
         @endforeach
     </div>

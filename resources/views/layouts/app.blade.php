@@ -676,10 +676,10 @@
             </a>
             @endcan
 
-            @canany(['role.manage','user.view','store.manage','maintenance_type.manage'])
+            @canany(['role.view','role.manage','user.view','store.view','store.manage','maintenance_type.view','maintenance_type.manage'])
             <div class="sidebar-section">Admin</div>
 
-            @can('role.manage')
+            @canany(['role.view','role.manage'])
             <a href="{{ route('admin.roles.index') }}" title="Roles"
                class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
@@ -687,7 +687,7 @@
                 </svg>
                 <span class="nav-label">Roles</span>
             </a>
-            @endcan
+            @endcanany
 
             @can('user.view')
             <a href="{{ route('admin.users.index') }}" title="Users"
@@ -699,7 +699,7 @@
             </a>
             @endcan
 
-            @can('store.manage')
+            @canany(['store.view','store.manage'])
             <a href="{{ route('admin.stores.index') }}" title="Lokasi"
                class="nav-link {{ request()->routeIs('admin.stores.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
@@ -707,9 +707,9 @@
                 </svg>
                 <span class="nav-label">Lokasi</span>
             </a>
-            @endcan
+            @endcanany
 
-            @can('maintenance_type.manage')
+            @canany(['maintenance_type.view','maintenance_type.manage'])
             <a href="{{ route('admin.maintenance-types.index') }}" title="Jenis Maintenance"
                class="nav-link {{ request()->routeIs('admin.maintenance-types.*') ? 'active' : '' }}">
                 <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
@@ -717,7 +717,7 @@
                 </svg>
                 <span class="nav-label">Jenis Maintenance</span>
             </a>
-            @endcan
+            @endcanany
             @endcanany
         </nav>
 

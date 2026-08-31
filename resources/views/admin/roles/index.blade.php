@@ -8,12 +8,14 @@
         <h1 class="page-title" style="margin-top:.25rem">Role &amp; Permission</h1>
         <p style="margin-top:.25rem;font-size:.875rem;color:#64748b">Atur peran staf dan hak akses fitur untuk masing-masing role.</p>
     </div>
+    @can('role.manage')
     <button onclick="document.getElementById('modal-add-role').style.display='flex'" class="btn btn-primary">
         <svg style="width:15px;height:15px" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
         </svg>
         Tambah Role
     </button>
+    @endcan
 </div>
 
 {{-- Status alert --}}
@@ -59,6 +61,7 @@
                 @endif
             </div>
 
+            @can('role.manage')
             @if(!$isSuperAdmin && $role->users_count === 0)
             <form method="POST" action="{{ route('admin.roles.destroy', $role) }}"
                   onsubmit="event.preventDefault(); window.confirmAction('Hapus role {{ addslashes($role->name) }}?', () => this.submit())">
@@ -68,13 +71,14 @@
                 </button>
             </form>
             @endif
+            @endcan
         </div>
 
         @if($isSuperAdmin)
         <p style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f1f5f9;font-size:.8125rem;color:#94a3b8">
             Super Admin selalu memiliki semua permission dan tidak bisa diedit lewat halaman ini.
         </p>
-        @else
+        @elseif(auth()->user()->can('role.manage'))
         <details style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f1f5f9">
             <summary style="cursor:pointer;font-size:.8125rem;font-weight:600;color:#111827;list-style:none;display:flex;align-items:center;gap:.375rem;user-select:none">
                 <svg class="chevron" style="width:13px;height:13px;transition:transform .15s" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>

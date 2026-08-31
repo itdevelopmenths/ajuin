@@ -22,7 +22,9 @@ class PermissionSeeder extends Seeder
         'user.delete',
         'store.view',
         'store.manage',
+        'maintenance_type.view',
         'maintenance_type.manage',
+        'role.view',
         'role.manage',
         'scope.manage',
     ];

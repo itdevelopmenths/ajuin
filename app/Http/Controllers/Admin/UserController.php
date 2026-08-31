@@ -107,7 +107,7 @@ class UserController extends Controller
 
         $storeIds = $request->input('store_ids', []);
 
-        if ($user->hasRole(['Super Admin', 'Chief'])) {
+        if ($user->hasRole(['Super Admin', 'Chief', 'Manager'])) {
             $user->scopes()->create(['scope_type' => 'ALL', 'store_id' => null]);
         } elseif (! empty($storeIds)) {
             foreach ($storeIds as $storeId) {

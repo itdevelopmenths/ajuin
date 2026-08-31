@@ -8,12 +8,14 @@
         <h1 class="page-title" style="margin-top:.25rem">Manajemen User</h1>
         <p style="margin-top:.25rem;font-size:.875rem;color:#64748b">Kelola akun, role, dan akses toko per user.</p>
     </div>
+    @can('user.create')
     <button onclick="document.getElementById('modal-add-user').style.display='flex'" class="btn btn-primary">
         <svg style="width:15px;height:15px" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
         </svg>
         Tambah User
     </button>
+    @endcan
 </div>
 
 {{-- Status alert --}}
@@ -65,9 +67,12 @@
                     </td>
                     <td style="padding:1rem 1.5rem;text-align:right">
                         <div style="display:flex;align-items:center;justify-content:flex-end;gap:.5rem">
+                            @can('user.edit')
                             <a href="{{ route('admin.users.edit', $user) }}" class="btn-dt-action" style="padding:.4rem .875rem">Edit / Assign</a>
+                            @endcan
+                            @can('user.delete')
                             @if(!$user->hasRole('Super Admin'))
-                            <button type="button" 
+                            <button type="button"
                                 onclick="window.confirmAction('Hapus user {{ addslashes($user->name) }}?', () => document.getElementById('del-{{ $user->id }}').submit())"
                                 style="background:none;border:none;cursor:pointer;color:#ef4444;padding:.4rem;border-radius:.375rem" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'" title="Hapus User">
                                 <svg style="width:16px;height:16px" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
@@ -76,6 +81,7 @@
                                 @csrf @method('DELETE')
                             </form>
                             @endif
+                            @endcan
                         </div>
                     </td>
                 </tr>

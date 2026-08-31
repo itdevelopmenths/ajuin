@@ -46,11 +46,20 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:report.view')->name('reports.index');
 
     Route::prefix('admin')->name('admin.')->group(function (): void {
-        Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('permission:role.manage');
-        Route::resource('users', UserController::class)->only(['index', 'store', 'edit', 'update', 'destroy'])->middleware('permission:user.view|user.create|user.edit|user.delete');
-        Route::get('/stores/data', [StoreController::class, 'data'])->middleware('permission:store.manage')->name('stores.data');
-        Route::resource('stores', StoreController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('permission:store.manage');
-        Route::resource('maintenance-types', MaintenanceTypeController::class)->only(['index', 'store', 'update', 'destroy'])->middleware('permission:maintenance_type.manage');
+        Route::resource('roles', RoleController::class)->only(['index'])->middleware('permission:role.view|role.manage');
+        Route::resource('roles', RoleController::class)->only(['store', 'update', 'destroy'])->middleware('permission:role.manage');
+
+        Route::resource('users', UserController::class)->only(['index'])->middleware('permission:user.view|user.create|user.edit|user.delete');
+        Route::resource('users', UserController::class)->only(['edit', 'update'])->middleware('permission:user.edit');
+        Route::resource('users', UserController::class)->only(['store'])->middleware('permission:user.create');
+        Route::resource('users', UserController::class)->only(['destroy'])->middleware('permission:user.delete');
+
+        Route::get('/stores/data', [StoreController::class, 'data'])->middleware('permission:store.view|store.manage')->name('stores.data');
+        Route::resource('stores', StoreController::class)->only(['index'])->middleware('permission:store.view|store.manage');
+        Route::resource('stores', StoreController::class)->only(['store', 'update', 'destroy'])->middleware('permission:store.manage');
+
+        Route::resource('maintenance-types', MaintenanceTypeController::class)->only(['index'])->middleware('permission:maintenance_type.view|maintenance_type.manage');
+        Route::resource('maintenance-types', MaintenanceTypeController::class)->only(['store', 'update', 'destroy'])->middleware('permission:maintenance_type.manage');
         Route::resource('tiers', TierController::class)->only(['store', 'update', 'destroy'])->middleware('permission:maintenance_type.manage');
     });
 });

@@ -11,6 +11,7 @@
 </div>
 
 {{-- Form tambah toko --}}
+@can('store.manage')
 <div class="card" style="padding:1.25rem;margin-bottom:1rem;position:relative">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
         <h2 style="font-size:.875rem;font-weight:700;color:#0f172a">Tambah Lokasi Baru</h2>
@@ -44,6 +45,7 @@
         </div>
     </form>
 </div>
+@endcan
 
 {{-- Status alert --}}
 @if(session('status'))

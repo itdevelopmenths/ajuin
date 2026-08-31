@@ -28,12 +28,14 @@ class StoreController extends Controller
                 '<span class="badge badge-cat-' . $store->category . '">' . (config('ajuin.store_categories')[$store->category] ?? $store->category) . '</span>'
             )
             ->addColumn('actions', fn (Store $store) =>
-                '<div style="display:flex;gap:.5rem;align-items:center">' .
-                    '<form method="POST" action="' . route('admin.stores.destroy', $store) . '" style="display:inline" onsubmit="event.preventDefault(); window.confirmAction(\'Hapus toko ini?\', () => this.submit())">' .
-                        csrf_field() . method_field('DELETE') .
-                        '<button type="submit" style="font-size:.75rem;font-weight:600;color:#ef4444;background:none;border:none;cursor:pointer;padding:0">Hapus</button>' .
-                    '</form>' .
-                '</div>'
+                auth()->user()->can('store.manage')
+                    ? '<div style="display:flex;gap:.5rem;align-items:center">' .
+                        '<form method="POST" action="' . route('admin.stores.destroy', $store) . '" style="display:inline" onsubmit="event.preventDefault(); window.confirmAction(\'Hapus toko ini?\', () => this.submit())">' .
+                            csrf_field() . method_field('DELETE') .
+                            '<button type="submit" style="font-size:.75rem;font-weight:600;color:#ef4444;background:none;border:none;cursor:pointer;padding:0">Hapus</button>' .
+                        '</form>' .
+                    '</div>'
+                    : '<span style="color:#cbd5e1">—</span>'
             )
             ->editColumn('created_at', fn (Store $store) => $store->created_at->format('d M Y H:i'))
             ->rawColumns(['category', 'actions'])
