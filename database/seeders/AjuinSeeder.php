@@ -271,9 +271,9 @@ class AjuinSeeder extends Seeder
         );
 
         // ── Tier & deadline maintenance ────────────────────────────
-        $tierA = Tier::firstOrCreate(['name' => 'A'], ['deadline_days' => 3]);
-        $tierB = Tier::firstOrCreate(['name' => 'B'], ['deadline_days' => 7]);
-        $tierC = Tier::firstOrCreate(['name' => 'C'], ['deadline_days' => 14]);
+        $tierA = Tier::firstOrCreate(['name' => 'A'], ['deadline_days' => 5]);
+        $tierB = Tier::firstOrCreate(['name' => 'B'], ['deadline_days' => 10]);
+        $tierC = Tier::firstOrCreate(['name' => 'C'], ['deadline_days' => 20]);
 
         // ── Jenis Maintenance (berelasi ke tier) ───────────────────
         // Format: 'Nama Tier' => ['Jenis maintenance', ...]
