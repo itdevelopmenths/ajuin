@@ -57,6 +57,10 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:ticket.update_status')
         ->name('tickets.notes.store');
 
+    Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])
+        ->middleware('permission:ticket.delete')
+        ->name('tickets.destroy');
+
     Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:report.view')->name('reports.index');
 
     Route::prefix('admin')->name('admin.')->group(function (): void {

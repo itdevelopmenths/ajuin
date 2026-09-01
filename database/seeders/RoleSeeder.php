@@ -30,7 +30,6 @@ class RoleSeeder extends Seeder
             'HRGA'        => [
                 'ticket.view',
                 'ticket.update_status',
-                'ticket.delete',
                 'ticket.export',
                 'report.view',
             ],

@@ -200,6 +200,15 @@ class TicketController extends Controller
         return back()->with('status', 'Catatan berhasil ditambahkan.');
     }
 
+    public function destroy(Request $request, Ticket $ticket): RedirectResponse
+    {
+        abort_unless($request->user()->canSeeStore($ticket->store), 403);
+
+        $ticket->delete();
+
+        return redirect()->route('tickets.index')->with('status', 'Ticket berhasil dihapus.');
+    }
+
     // ── Private helpers ─────────────────────────────────────────
 
     /**
