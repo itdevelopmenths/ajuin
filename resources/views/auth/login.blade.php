@@ -21,9 +21,12 @@
             </div>
 
             <div>
-                <label class="form-label" for="password">Password</label>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                    <label class="form-label" for="password" style="margin-bottom:0">Password</label>
+                    <a href="{{ route('password.request') }}" style="font-size:.75rem;font-weight:600;color:#475569;text-decoration:none">Lupa password?</a>
+                </div>
                 <input id="password" name="password" type="password"
-                    class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                    class="form-input" style="margin-top:.3125rem" placeholder="••••••••" required autocomplete="current-password">
             </div>
 
             <div style="display:flex;align-items:center;gap:.5rem">

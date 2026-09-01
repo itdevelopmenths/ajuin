@@ -725,10 +725,10 @@
         <div class="sidebar-footer">
             <div class="sidebar-user">
                 <span class="sidebar-avatar" title="{{ auth()->user()->name }}">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span>
-                <div class="sidebar-user-info" style="flex:1;min-width:0">
+                <a href="{{ route('profile.edit') }}" class="sidebar-user-info" style="flex:1;min-width:0;text-decoration:none" title="Profil &amp; Ganti Password">
                     <div class="sidebar-user-name truncate">{{ auth()->user()->name }}</div>
                     <div class="sidebar-user-role">{{ auth()->user()->getRoleNames()->join(', ') ?: 'User' }}</div>
-                </div>
+                </a>
                 <form method="post" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" title="Logout" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='none'">
@@ -758,10 +758,10 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="hidden sm:flex items-center gap-2 text-sm">
+                    <a href="{{ route('profile.edit') }}" class="hidden sm:flex items-center gap-2 text-sm" style="text-decoration:none" title="Profil &amp; Ganti Password">
                         <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white" style="background:#111827">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span>
                         <span class="font-medium text-slate-700 text-xs">{{ auth()->user()->name }}</span>
-                    </span>
+                    </a>
                 </div>
             </div>
         </header>

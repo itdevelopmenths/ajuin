@@ -42,11 +42,11 @@
     </a>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr;gap:1.25rem">
-    {{-- Top row: detail + update status --}}
-    <div style="display:grid;grid-template-columns:1fr;gap:1.25rem" class="lg-grid-cols-3">
+<div class="ticket-detail-grid">
+    {{-- Kolom utama: detail + timeline --}}
+    <div class="ticket-detail-col">
         {{-- Detail card --}}
-        <div class="card" style="padding:1.5rem;grid-column:span 2">
+        <div class="card" style="padding:1.5rem">
             <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Detail Ticket</h2>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;margin-bottom:1.5rem">
                 <div>
@@ -130,8 +130,41 @@
             @endif
         </div>
 
+        {{-- Timeline --}}
+        <div class="card" style="padding:1.5rem">
+            <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.5rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Timeline</h2>
+            <ol class="timeline">
+                @foreach($ticket->logs as $log)
+                <li class="timeline-item">
+                    <div class="timeline-dot">
+                        <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                    </div>
+                    <div style="padding-top:.125rem;flex:1">
+                        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                            @if($log->from_status)
+                            <span class="badge badge-{{ $log->from_status }}" style="font-size:.65rem">{{ $log->from_status }}</span>
+                            <svg style="width:12px;height:12px;color:#94a3b8" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+                            @endif
+                            <span class="badge badge-{{ $log->to_status }}" style="font-size:.65rem">{{ $log->to_status }}</span>
+                        </div>
+                        <div style="margin-top:.375rem;font-size:.75rem;color:#94a3b8">
+                            {{ $log->created_at->format('d M Y H:i') }}
+                            @if($log->user) · <span style="font-weight:600;color:#64748b">{{ $log->user->name }}</span> @endif
+                        </div>
+                        @if($log->note)
+                        <div style="margin-top:.375rem;font-size:.8125rem;color:#475569;background:#f8fafc;border-radius:.5rem;padding:.5rem .75rem;border-left:3px solid #e2e8f0">{{ $log->note }}</div>
+                        @endif
+                    </div>
+                </li>
+                @endforeach
+            </ol>
+        </div>
+    </div>
+
+    {{-- Kolom samping: aksi status + catatan --}}
+    <div class="ticket-detail-col">
         {{-- Update Status --}}
-        <div class="card" style="padding:1.5rem;align-self:start">
+        <div class="card" style="padding:1.5rem">
             <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Update Status</h2>
             @can('ticket.update_status')
                 @if($nextStatuses)
@@ -177,74 +210,55 @@
                 @endif
             @endcan
         </div>
-    </div>
 
-    {{-- Catatan --}}
-    <div class="card" style="padding:1.5rem">
-        <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Catatan</h2>
+        {{-- Catatan --}}
+        <div class="card" style="padding:1.5rem">
+            <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Catatan</h2>
 
-        @if($ticket->notes->isEmpty())
-        <p style="font-size:.8125rem;color:#94a3b8">Belum ada catatan.</p>
-        @else
-        <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.25rem">
-            @foreach($ticket->notes as $ticketNote)
-            <div style="background:#f8fafc;border-radius:.625rem;padding:.75rem 1rem;border:1px solid #f1f5f9">
-                <div style="font-size:.9rem;color:#334155;white-space:pre-line;line-height:1.6">{{ $ticketNote->note }}</div>
-                <div style="margin-top:.5rem;font-size:.75rem;color:#94a3b8">
-                    {{ $ticketNote->created_at->format('d M Y H:i') }}
-                    @if($ticketNote->user) · <span style="font-weight:600;color:#64748b">{{ $ticketNote->user->name }}</span> @endif
+            @if($ticket->notes->isEmpty())
+            <p style="font-size:.8125rem;color:#94a3b8">Belum ada catatan.</p>
+            @else
+            <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.25rem">
+                @foreach($ticket->notes as $ticketNote)
+                <div style="background:#f8fafc;border-radius:.625rem;padding:.75rem 1rem;border:1px solid #f1f5f9">
+                    <div style="font-size:.9rem;color:#334155;white-space:pre-line;line-height:1.6">{{ $ticketNote->note }}</div>
+                    <div style="margin-top:.5rem;font-size:.75rem;color:#94a3b8">
+                        {{ $ticketNote->created_at->format('d M Y H:i') }}
+                        @if($ticketNote->user) · <span style="font-weight:600;color:#64748b">{{ $ticketNote->user->name }}</span> @endif
+                    </div>
                 </div>
+                @endforeach
             </div>
-            @endforeach
+            @endif
+
+            @can('ticket.update_status')
+            <form method="post" action="{{ route('tickets.notes.store', $ticket) }}" class="space-y-3">
+                @csrf
+                <div>
+                    <textarea name="note" rows="3" class="form-input" placeholder="Tambahkan catatan…" required></textarea>
+                </div>
+                <button class="btn btn-primary" style="justify-content:center">Tambah Catatan</button>
+            </form>
+            @endcan
         </div>
-        @endif
-
-        @can('ticket.update_status')
-        <form method="post" action="{{ route('tickets.notes.store', $ticket) }}" class="space-y-3">
-            @csrf
-            <div>
-                <textarea name="note" rows="3" class="form-input" placeholder="Tambahkan catatan…" required></textarea>
-            </div>
-            <button class="btn btn-primary" style="justify-content:center">Tambah Catatan</button>
-        </form>
-        @endcan
-    </div>
-
-    {{-- Timeline --}}
-    <div class="card" style="padding:1.5rem">
-        <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.5rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Timeline</h2>
-        <ol class="timeline">
-            @foreach($ticket->logs as $log)
-            <li class="timeline-item">
-                <div class="timeline-dot">
-                    <svg fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
-                </div>
-                <div style="padding-top:.125rem;flex:1">
-                    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-                        @if($log->from_status)
-                        <span class="badge badge-{{ $log->from_status }}" style="font-size:.65rem">{{ $log->from_status }}</span>
-                        <svg style="width:12px;height:12px;color:#94a3b8" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
-                        @endif
-                        <span class="badge badge-{{ $log->to_status }}" style="font-size:.65rem">{{ $log->to_status }}</span>
-                    </div>
-                    <div style="margin-top:.375rem;font-size:.75rem;color:#94a3b8">
-                        {{ $log->created_at->format('d M Y H:i') }}
-                        @if($log->user) · <span style="font-weight:600;color:#64748b">{{ $log->user->name }}</span> @endif
-                    </div>
-                    @if($log->note)
-                    <div style="margin-top:.375rem;font-size:.8125rem;color:#475569;background:#f8fafc;border-radius:.5rem;padding:.5rem .75rem;border-left:3px solid #e2e8f0">{{ $log->note }}</div>
-                    @endif
-                </div>
-            </li>
-            @endforeach
-        </ol>
     </div>
 </div>
 
 <style>
+.ticket-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+.ticket-detail-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
 @media (min-width: 1024px) {
-    .lg-grid-cols-3 { grid-template-columns: 1fr 1fr 1fr !important; }
-    .lg-grid-cols-3 > :first-child { grid-column: span 2 !important; }
+    .ticket-detail-grid { grid-template-columns: 2fr 1fr; }
 }
 </style>
 

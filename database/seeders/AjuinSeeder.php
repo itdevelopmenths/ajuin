@@ -235,11 +235,21 @@ class AjuinSeeder extends Seeder
         }
 
         // ── Super Admin ──────────────────────────────────────────
-        /** @var User $admin */
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@ajuin.test'],
-            ['name' => 'System Super Admin', 'password' => Hash::make('password'), 'is_active' => true],
-        );
+        // Dicari lewat role (bukan email) supaya perubahan email admin meng-update
+        // akun yang sama, bukan bikin akun baru — sama seperti pola akun Keptok di atas.
+        /** @var User|null $admin */
+        $admin = User::role('Super Admin')->first();
+
+        if ($admin) {
+            if ($admin->email !== 'itdevelopmenths@gmail.com') {
+                $admin->update(['email' => 'itdevelopmenths@gmail.com']);
+            }
+        } else {
+            $admin = User::firstOrCreate(
+                ['email' => 'itdevelopmenths@gmail.com'],
+                ['name' => 'System Super Admin', 'password' => Hash::make('password'), 'is_active' => true],
+            );
+        }
         $admin->syncRoles(['Super Admin']);
         $admin->scopes()->updateOrCreate(
             ['scope_type' => 'ALL'],
