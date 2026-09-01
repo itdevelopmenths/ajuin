@@ -78,7 +78,7 @@
                 <label class="form-label">Lampiran <span style="color:#ef4444">*</span> <span style="font-weight:400;color:#94a3b8;margin-left:.25rem">(Wajib, min. 1 file)</span></label>
                 <div class="file-zone" id="file-zone">
                     <input type="file" name="attachments[]" id="attachment-input"
-                        accept=".jpg,.jpeg,.png,.pdf" multiple>
+                        accept="image/*,application/pdf" multiple>
                     <div class="file-zone-icon" id="file-zone-icon">
                         <svg style="width:18px;height:18px;color:#94a3b8" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></svg>
                     </div>
@@ -86,8 +86,13 @@
                     <div class="file-zone-sub" id="file-zone-sub">JPG, PNG, atau PDF (maks. 2 MB per file, maks. 5 file)</div>
                 </div>
                 <div id="file-list" style="margin-top: 0.5rem; display: none; flex-direction: column; gap: 0.5rem;"></div>
+                <div id="compress-status" style="display:none;margin-top:.5rem;font-size:.8125rem;color:#64748b;font-weight:600">⏳ Mengompres foto…</div>
                 <button type="button" id="add-more-files-btn" style="display: none; margin-top: 0.25rem; background: #fff; color: #111827; border: 1.5px dashed #111827; border-radius: 0.625rem; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background .15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#fff'">
                     + Tambah File Lainnya
+                </button>
+                <button type="button" id="geo-camera-btn" style="margin-top:.5rem;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:.625rem;padding:.625rem 1rem;font-size:.875rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:background .15s" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                    <svg style="width:16px;height:16px" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 8.55 5.25h6.9c.71 0 1.386.343 1.723.925m-9.346 0A2.31 2.31 0 0 0 6.673 6.175l-.415.83c-.336.673-.998 1.117-1.746 1.117H3.75A2.25 2.25 0 0 0 1.5 10.372v8.378a2.25 2.25 0 0 0 2.25 2.25h16.5a2.25 2.25 0 0 0 2.25-2.25v-8.378a2.25 2.25 0 0 0-2.25-2.25h-.762c-.748 0-1.41-.444-1.746-1.117l-.415-.83M6.827 6.175 8.55 5.25m6.9 0-1.723.925M12 15.75a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                    Ambil Foto (Lokasi &amp; Waktu)
                 </button>
             </div>
 
@@ -105,6 +110,8 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/image-compress.js') }}"></script>
+<script src="{{ asset('js/geo-camera.js') }}"></script>
 <script>
     $(document).ready(function() {
         $('#store_id').select2({
@@ -146,7 +153,7 @@
                     : 'JPG, PNG, atau PDF (maks. 2 MB per file, maks. 5 file)';
             }
             if (fileInput) {
-                fileInput.setAttribute('accept', isMaintenance ? '.jpg,.jpeg,.png' : '.jpg,.jpeg,.png,.pdf');
+                fileInput.setAttribute('accept', isMaintenance ? 'image/*' : 'image/*,application/pdf');
             }
         }
 
@@ -196,6 +203,8 @@
         const fileLabel = document.getElementById('file-label');
         const fileList = document.getElementById('file-list');
         const addMoreBtn = document.getElementById('add-more-files-btn');
+        const compressStatus = document.getElementById('compress-status');
+        const geoCameraBtn = document.getElementById('geo-camera-btn');
 
         toggleMaintenanceField();
         updateMaintenanceBadge();
@@ -253,22 +262,60 @@
             }
         }
 
+        async function addFiles(fileListLike) {
+            const files = Array.from(fileListLike);
+            if (files.length === 0) return;
+
+            fileInput.disabled = true;
+            addMoreBtn.disabled = true;
+            if (compressStatus) compressStatus.style.display = 'block';
+
+            for (const newFile of files) {
+                if (selectedFiles.length >= 5) break;
+                const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
+                if (isDuplicate) continue;
+
+                let toAdd = newFile;
+                if (window.compressImage) {
+                    try {
+                        toAdd = await window.compressImage(newFile);
+                    } catch (err) {
+                        console.error('Gagal mengompres foto, memakai file asli:', err);
+                    }
+                }
+                selectedFiles.push(toAdd);
+                renderFileList();
+            }
+
+            if (compressStatus) compressStatus.style.display = 'none';
+            fileInput.disabled = false;
+            addMoreBtn.disabled = false;
+        }
+
         if (fileInput) {
             fileInput.addEventListener('change', () => {
                 if (fileInput.files.length > 0) {
-                    Array.from(fileInput.files).forEach(newFile => {
-                        const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
-                        if (!isDuplicate && selectedFiles.length < 5) {
-                            selectedFiles.push(newFile);
-                        }
-                    });
+                    addFiles(fileInput.files);
                 }
-                renderFileList();
             });
 
             addMoreBtn.addEventListener('click', () => {
                 fileInput.click();
             });
+
+            if (geoCameraBtn) {
+                geoCameraBtn.addEventListener('click', async () => {
+                    if (selectedFiles.length >= 5) {
+                        alert('Maksimal 5 file lampiran.');
+                        return;
+                    }
+                    if (!window.openGeoCamera) return;
+                    const file = await window.openGeoCamera();
+                    if (file) {
+                        await addFiles([file]);
+                    }
+                });
+            }
 
             // Drag-and-drop
             fileZone.addEventListener('dragover', e => { e.preventDefault(); fileZone.style.borderColor = '#111827'; });
@@ -277,13 +324,7 @@
                 e.preventDefault();
                 fileZone.style.borderColor = '';
                 if (e.dataTransfer.files.length > 0) {
-                    Array.from(e.dataTransfer.files).forEach(newFile => {
-                        const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
-                        if (!isDuplicate && selectedFiles.length < 5) {
-                            selectedFiles.push(newFile);
-                        }
-                    });
-                    renderFileList();
+                    addFiles(e.dataTransfer.files);
                 }
             });
         }

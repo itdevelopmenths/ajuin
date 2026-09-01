@@ -198,13 +198,18 @@
                         <div id="completion-attachments-field" style="display:none">
                             <label class="form-label" style="margin-bottom:.3rem">Bukti Selesai <span style="color:#ef4444">*</span> <span style="font-weight:400;color:#94a3b8">(foto, wajib min. 1 file, bisa lebih dari satu)</span></label>
                             <div class="file-zone" id="completion-file-zone" style="position:relative;border:2px dashed #e2e8f0;border-radius:.625rem;padding:1.25rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s">
-                                <input type="file" name="completion_attachments[]" id="completion-attachments-input" accept=".jpg,.jpeg,.png" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer">
+                                <input type="file" name="completion_attachments[]" id="completion-attachments-input" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer">
                                 <div style="font-size:.8125rem;font-weight:600;color:#64748b">Klik atau seret foto ke sini</div>
                                 <div style="font-size:.75rem;color:#94a3b8;margin-top:.2rem">JPG/PNG, maks. 2 MB per file, maks. 5 file</div>
                             </div>
                             <div id="completion-file-list" style="margin-top:.5rem;display:none;flex-direction:column;gap:.5rem"></div>
+                            <div id="completion-compress-status" style="display:none;margin-top:.5rem;font-size:.8125rem;color:#64748b;font-weight:600">⏳ Mengompres foto…</div>
                             <button type="button" id="completion-add-more-btn" style="display:none;margin-top:.375rem;background:#fff;color:#111827;border:1.5px dashed #111827;border-radius:.625rem;padding:.5rem .875rem;font-size:.8125rem;font-weight:600;cursor:pointer;width:100%;text-align:center">
                                 + Tambah Foto Lainnya
+                            </button>
+                            <button type="button" id="completion-geo-camera-btn" style="margin-top:.375rem;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:.625rem;padding:.5rem .875rem;font-size:.8125rem;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:.4rem">
+                                <svg style="width:15px;height:15px" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 8.55 5.25h6.9c.71 0 1.386.343 1.723.925m-9.346 0A2.31 2.31 0 0 0 6.673 6.175l-.415.83c-.336.673-.998 1.117-1.746 1.117H3.75A2.25 2.25 0 0 0 1.5 10.372v8.378a2.25 2.25 0 0 0 2.25 2.25h16.5a2.25 2.25 0 0 0 2.25-2.25v-8.378a2.25 2.25 0 0 0-2.25-2.25h-.762c-.748 0-1.41-.444-1.746-1.117l-.415-.83M6.827 6.175 8.55 5.25m6.9 0-1.723.925M12 15.75a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                                Ambil Foto (Lokasi &amp; Waktu)
                             </button>
                         </div>
                         <button class="btn btn-primary" style="width:100%;justify-content:center">Update Status</button>
@@ -275,6 +280,8 @@
 </style>
 
 @push('scripts')
+<script src="{{ asset('js/image-compress.js') }}"></script>
+<script src="{{ asset('js/geo-camera.js') }}"></script>
 <script>
     (function () {
         const statusSelect = document.getElementById('update-status-select');
@@ -308,6 +315,8 @@
         const fileZone = document.getElementById('completion-file-zone');
         const fileList = document.getElementById('completion-file-list');
         const addMoreBtn = document.getElementById('completion-add-more-btn');
+        const compressStatus = document.getElementById('completion-compress-status');
+        const geoCameraBtn = document.getElementById('completion-geo-camera-btn');
         const MAX_FILES = 5;
         let selectedFiles = [];
 
@@ -346,19 +355,57 @@
             }
         }
 
+        async function addFiles(fileListLike) {
+            const files = Array.from(fileListLike);
+            if (files.length === 0) return;
+
+            completionInput.disabled = true;
+            addMoreBtn.disabled = true;
+            if (compressStatus) compressStatus.style.display = 'block';
+
+            for (const newFile of files) {
+                if (selectedFiles.length >= MAX_FILES) break;
+                const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
+                if (isDuplicate) continue;
+
+                let toAdd = newFile;
+                if (window.compressImage) {
+                    try {
+                        toAdd = await window.compressImage(newFile);
+                    } catch (err) {
+                        console.error('Gagal mengompres foto, memakai file asli:', err);
+                    }
+                }
+                selectedFiles.push(toAdd);
+                renderFileList();
+            }
+
+            if (compressStatus) compressStatus.style.display = 'none';
+            completionInput.disabled = false;
+            addMoreBtn.disabled = false;
+        }
+
         completionInput.addEventListener('change', () => {
             if (completionInput.files.length > 0) {
-                Array.from(completionInput.files).forEach(newFile => {
-                    const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
-                    if (!isDuplicate && selectedFiles.length < MAX_FILES) {
-                        selectedFiles.push(newFile);
-                    }
-                });
+                addFiles(completionInput.files);
             }
-            renderFileList();
         });
 
         addMoreBtn.addEventListener('click', () => completionInput.click());
+
+        if (geoCameraBtn) {
+            geoCameraBtn.addEventListener('click', async () => {
+                if (selectedFiles.length >= MAX_FILES) {
+                    alert('Maksimal ' + MAX_FILES + ' foto.');
+                    return;
+                }
+                if (!window.openGeoCamera) return;
+                const file = await window.openGeoCamera();
+                if (file) {
+                    await addFiles([file]);
+                }
+            });
+        }
 
         fileZone.addEventListener('dragover', e => { e.preventDefault(); fileZone.style.borderColor = '#111827'; });
         fileZone.addEventListener('dragleave', () => { fileZone.style.borderColor = ''; });
@@ -366,13 +413,7 @@
             e.preventDefault();
             fileZone.style.borderColor = '';
             if (e.dataTransfer.files.length > 0) {
-                Array.from(e.dataTransfer.files).forEach(newFile => {
-                    const isDuplicate = selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size);
-                    if (!isDuplicate && selectedFiles.length < MAX_FILES) {
-                        selectedFiles.push(newFile);
-                    }
-                });
-                renderFileList();
+                addFiles(e.dataTransfer.files);
             }
         });
     })();

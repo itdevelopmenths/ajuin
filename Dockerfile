@@ -28,6 +28,10 @@ RUN apt-get update && apt-get install -y \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip
 
+# Raise default PHP upload limits (2M/8M) so multi-file attachment uploads aren't
+# rejected by PHP before Laravel's own per-file validation (max:2048) runs
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
