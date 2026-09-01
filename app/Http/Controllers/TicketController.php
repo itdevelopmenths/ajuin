@@ -129,7 +129,7 @@ class TicketController extends Controller
 
     public function show(Request $request, Ticket $ticket): View
     {
-        $ticket->load(['store', 'logs.user', 'handler']);
+        $ticket->load(['store', 'logs.user', 'notes.user', 'handler']);
         abort_unless($request->user()->canSeeStore($ticket->store), 403);
 
         return view('tickets.show', [
@@ -149,7 +149,6 @@ class TicketController extends Controller
 
         $data = $request->validate([
             'status' => ['required', Rule::in($nextStatuses)],
-            'note'   => [Rule::requiredIf(fn () => $request->input('status') === 'REJECTED'), 'nullable', 'string'],
             'payment_amount' => [Rule::requiredIf($isPaying), 'nullable', 'integer', 'min:0'],
             'completion_attachments'   => [Rule::requiredIf($isCompleting), 'array', 'min:1', 'max:5'],
             'completion_attachments.*' => ['file', 'mimes:jpg,jpeg,png', 'max:2048'],
@@ -180,10 +179,25 @@ class TicketController extends Controller
             'user_id'     => $request->user()->id,
             'from_status' => $from,
             'to_status'   => $data['status'],
-            'note'        => $data['note'] ?? null,
         ]);
 
         return back()->with('status', 'Status ticket diperbarui.');
+    }
+
+    public function addNote(Request $request, Ticket $ticket): RedirectResponse
+    {
+        abort_unless($request->user()->canSeeStore($ticket->store), 403);
+
+        $data = $request->validate([
+            'note' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $ticket->notes()->create([
+            'user_id' => $request->user()->id,
+            'note'    => $data['note'],
+        ]);
+
+        return back()->with('status', 'Catatan berhasil ditambahkan.');
     }
 
     // ── Private helpers ─────────────────────────────────────────

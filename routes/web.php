@@ -43,6 +43,10 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:ticket.update_status')
         ->name('tickets.update-status');
 
+    Route::post('/tickets/{ticket}/notes', [TicketController::class, 'addNote'])
+        ->middleware('permission:ticket.update_status')
+        ->name('tickets.notes.store');
+
     Route::get('/reports', [ReportController::class, 'index'])->middleware('permission:report.view')->name('reports.index');
 
     Route::prefix('admin')->name('admin.')->group(function (): void {

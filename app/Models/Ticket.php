@@ -68,6 +68,11 @@ class Ticket extends Model
         return $this->hasMany(TicketLog::class);
     }
 
+    public function notes(): HasMany
+    {
+        return $this->hasMany(TicketNote::class)->latest('created_at');
+    }
+
     public function maintenanceType(): BelongsTo
     {
         return $this->belongsTo(MaintenanceType::class);

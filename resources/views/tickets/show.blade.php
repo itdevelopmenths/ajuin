@@ -146,10 +146,6 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div>
-                            <label class="form-label" style="margin-bottom:.3rem">Catatan <span style="color:#94a3b8;font-weight:400" id="update-note-hint">(opsional)</span></label>
-                            <textarea name="note" rows="3" class="form-input" placeholder="Tambahkan catatan status…"></textarea>
-                        </div>
                         <div id="payment-amount-field" style="display:none">
                             <label class="form-label" style="margin-bottom:.3rem">Nominal Pembayaran <span style="color:#ef4444">*</span></label>
                             <input type="number" name="payment_amount" id="payment-amount-input" min="0" step="1" class="form-input" placeholder="cth. 500000">
@@ -181,6 +177,37 @@
                 @endif
             @endcan
         </div>
+    </div>
+
+    {{-- Catatan --}}
+    <div class="card" style="padding:1.5rem">
+        <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1.25rem;padding-bottom:.875rem;border-bottom:1px solid #f1f5f9">Catatan</h2>
+
+        @if($ticket->notes->isEmpty())
+        <p style="font-size:.8125rem;color:#94a3b8">Belum ada catatan.</p>
+        @else
+        <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.25rem">
+            @foreach($ticket->notes as $ticketNote)
+            <div style="background:#f8fafc;border-radius:.625rem;padding:.75rem 1rem;border:1px solid #f1f5f9">
+                <div style="font-size:.9rem;color:#334155;white-space:pre-line;line-height:1.6">{{ $ticketNote->note }}</div>
+                <div style="margin-top:.5rem;font-size:.75rem;color:#94a3b8">
+                    {{ $ticketNote->created_at->format('d M Y H:i') }}
+                    @if($ticketNote->user) · <span style="font-weight:600;color:#64748b">{{ $ticketNote->user->name }}</span> @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+
+        @can('ticket.update_status')
+        <form method="post" action="{{ route('tickets.notes.store', $ticket) }}" class="space-y-3">
+            @csrf
+            <div>
+                <textarea name="note" rows="3" class="form-input" placeholder="Tambahkan catatan…" required></textarea>
+            </div>
+            <button class="btn btn-primary" style="justify-content:center">Tambah Catatan</button>
+        </form>
+        @endcan
     </div>
 
     {{-- Timeline --}}
@@ -229,7 +256,6 @@
         const completionInput = document.getElementById('completion-attachments-input');
         const paymentField = document.getElementById('payment-amount-field');
         const paymentInput = document.getElementById('payment-amount-input');
-        const noteHint = document.getElementById('update-note-hint');
         if (!statusSelect) return;
 
         function toggleFields() {
@@ -240,9 +266,6 @@
             const isPaying = statusSelect.value === 'PEMBAYARAN';
             paymentField.style.display = isPaying ? 'block' : 'none';
             paymentInput.required = isPaying;
-
-            const isRejecting = statusSelect.value === 'REJECTED';
-            noteHint.textContent = isRejecting ? '(wajib untuk penolakan)' : '(opsional)';
         }
 
         statusSelect.addEventListener('change', toggleFields);
