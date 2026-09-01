@@ -91,7 +91,12 @@ class TicketController extends Controller
 
         $attachments = [];
         foreach ($request->file('attachments') as $file) {
-            $attachments[] = $file->store('ticket-attachments', 'public');
+            $path = $file->store('ticket-attachments', 'public');
+            if ($path) {
+                $attachments[] = $path;
+            } else {
+                \Log::warning('Gagal menyimpan lampiran ticket', ['original_name' => $file->getClientOriginalName()]);
+            }
         }
 
         $recommendationLinks = $data['type'] === 'PEMBELIAN_PERALATAN'
@@ -167,7 +172,12 @@ class TicketController extends Controller
         if ($isCompleting) {
             $completionAttachments = [];
             foreach ($request->file('completion_attachments') as $file) {
-                $completionAttachments[] = $file->store('ticket-attachments', 'public');
+                $path = $file->store('ticket-attachments', 'public');
+                if ($path) {
+                    $completionAttachments[] = $path;
+                } else {
+                    \Log::warning('Gagal menyimpan bukti selesai ticket', ['original_name' => $file->getClientOriginalName()]);
+                }
             }
             $ticketUpdate['completion_attachments'] = $completionAttachments;
         }

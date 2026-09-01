@@ -113,10 +113,11 @@
                 <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Lampiran</div>
                 <div style="display:flex;gap:.75rem;flex-wrap:wrap">
                     @foreach($ticket->attachments as $index => $attachment)
+                        @continue(empty($attachment))
                         @if(\Illuminate\Support\Str::endsWith(strtolower($attachment), ['.jpg', '.jpeg', '.png']))
-                            <a href="{{ Storage::url($attachment) }}" target="_blank" style="display:block;border-radius:.5rem;overflow:hidden;border:1px solid #e2e8f0;width:fit-content;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
+                            <button type="button" class="attachment-thumb-btn" data-full="{{ Storage::url($attachment) }}" data-label="Lampiran {{ $index + 1 }}" style="display:block;border-radius:.5rem;overflow:hidden;border:1px solid #e2e8f0;width:fit-content;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:0;background:none;cursor:zoom-in">
                                 <img src="{{ Storage::url($attachment) }}" alt="Lampiran {{ $index + 1 }}" style="width:160px;height:160px;object-fit:cover;display:block;transition:transform .2s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            </a>
+                            </button>
                         @else
                             <a href="{{ Storage::url($attachment) }}" target="_blank" class="btn btn-secondary" style="font-size:.8125rem">
                                 <svg style="width:14px;height:14px" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></svg>
@@ -133,9 +134,10 @@
                 <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.5rem">Bukti Selesai</div>
                 <div style="display:flex;gap:.75rem;flex-wrap:wrap">
                     @foreach($ticket->completion_attachments as $index => $attachment)
-                    <a href="{{ Storage::url($attachment) }}" target="_blank" style="display:block;border-radius:.5rem;overflow:hidden;border:1px solid #e2e8f0;width:fit-content;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05)">
-                        <img src="{{ Storage::url($attachment) }}" alt="Bukti selesai {{ $index + 1 }}" style="width:160px;height:160px;object-fit:cover;display:block;transition:transform .2s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    </a>
+                        @continue(empty($attachment))
+                        <button type="button" class="attachment-thumb-btn" data-full="{{ Storage::url($attachment) }}" data-label="Bukti selesai {{ $index + 1 }}" style="display:block;border-radius:.5rem;overflow:hidden;border:1px solid #e2e8f0;width:fit-content;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.05);padding:0;background:none;cursor:zoom-in">
+                            <img src="{{ Storage::url($attachment) }}" alt="Bukti selesai {{ $index + 1 }}" style="width:160px;height:160px;object-fit:cover;display:block;transition:transform .2s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        </button>
                     @endforeach
                 </div>
             </div>
@@ -261,6 +263,11 @@
     </div>
 </div>
 
+<div id="attachment-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:2000;align-items:center;justify-content:center;padding:2rem;cursor:zoom-out">
+    <button type="button" id="attachment-modal-close" aria-label="Tutup" style="position:absolute;top:1.25rem;right:1.25rem;background:rgba(255,255,255,.12);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.5rem;line-height:1">&times;</button>
+    <img id="attachment-modal-img" src="" alt="" style="max-width:100%;max-height:100%;border-radius:.5rem;box-shadow:0 20px 60px rgba(0,0,0,.5);cursor:default">
+</div>
+
 <style>
 .ticket-detail-grid {
     display: grid;
@@ -283,6 +290,36 @@
 <script src="{{ asset('js/image-compress.js') }}"></script>
 <script src="{{ asset('js/geo-camera.js') }}"></script>
 <script>
+    (function () {
+        const modal = document.getElementById('attachment-modal');
+        const modalImg = document.getElementById('attachment-modal-img');
+        const modalCloseBtn = document.getElementById('attachment-modal-close');
+        if (!modal) return;
+
+        function openAttachmentModal(url, label) {
+            modalImg.src = url;
+            modalImg.alt = label || '';
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAttachmentModal() {
+            modal.style.display = 'none';
+            modalImg.src = '';
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('.attachment-thumb-btn').forEach(btn => {
+            btn.addEventListener('click', () => openAttachmentModal(btn.dataset.full, btn.dataset.label));
+        });
+
+        modalCloseBtn.addEventListener('click', closeAttachmentModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeAttachmentModal(); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display !== 'none') closeAttachmentModal();
+        });
+    })();
+
     (function () {
         const statusSelect = document.getElementById('update-status-select');
         const completionField = document.getElementById('completion-attachments-field');
