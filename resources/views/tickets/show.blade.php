@@ -69,6 +69,12 @@
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Tipe</div>
                     <div style="font-size:.875rem;font-weight:600;color:#1e293b">{{ config('ajuin.ticket_types')[$ticket->type] ?? $ticket->type }}</div>
                 </div>
+                @if($ticket->maintenanceType)
+                <div>
+                    <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Jenis Maintenance</div>
+                    <div style="font-size:.875rem;font-weight:600;color:#1e293b">{{ $ticket->maintenanceType->name }}</div>
+                </div>
+                @endif
                 @if($ticket->maintenance_deadline_days)
                 <div>
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Deadline</div>

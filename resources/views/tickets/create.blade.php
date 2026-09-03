@@ -127,6 +127,17 @@
         const maintenanceTierBadge = document.getElementById('maintenance-tier-badge');
         const attachmentHint       = document.getElementById('file-zone-sub');
 
+        let maintenanceSelect2Ready = false;
+        function initMaintenanceSelect2() {
+            if (maintenanceSelect2Ready) return;
+            $(maintenanceSelect).select2({
+                placeholder: "— Pilih jenis maintenance —",
+                allowClear: true,
+                width: '100%'
+            });
+            maintenanceSelect2Ready = true;
+        }
+
         function updateMaintenanceBadge() {
             const opt = maintenanceSelect.options[maintenanceSelect.selectedIndex];
             if (opt && opt.value) {
@@ -141,8 +152,12 @@
             const isMaintenance = typeSelect.value === 'MAINTENANCE';
             maintenanceField.style.display = isMaintenance ? 'block' : 'none';
             maintenanceSelect.required = isMaintenance;
+            if (isMaintenance) {
+                initMaintenanceSelect2();
+            }
             if (!isMaintenance) {
                 maintenanceSelect.value = '';
+                if (maintenanceSelect2Ready) $(maintenanceSelect).trigger('change');
                 maintenanceTierBadge.style.display = 'none';
             }
 
@@ -157,7 +172,7 @@
             }
         }
 
-        maintenanceSelect.addEventListener('change', updateMaintenanceBadge);
+        $(maintenanceSelect).on('change', updateMaintenanceBadge);
         typeSelect.addEventListener('change', toggleMaintenanceField);
 
         /* ── Link rekomendasi (hanya untuk Pembelian Peralatan) ── */

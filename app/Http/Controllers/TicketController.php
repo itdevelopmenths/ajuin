@@ -67,7 +67,12 @@ class TicketController extends Controller
     {
         return view('tickets.create', [
             'stores'           => $this->visibleStores($request),
-            'maintenanceTypes' => MaintenanceType::query()->with('tier')->orderBy('name')->get(),
+            'maintenanceTypes' => MaintenanceType::query()->with('tier')
+                ->join('tiers', 'tiers.id', '=', 'maintenance_types.tier_id')
+                ->orderBy('tiers.deadline_days')
+                ->orderBy('maintenance_types.name')
+                ->select('maintenance_types.*')
+                ->get(),
         ]);
     }
 
@@ -134,7 +139,7 @@ class TicketController extends Controller
 
     public function show(Request $request, Ticket $ticket): View
     {
-        $ticket->load(['store', 'logs.user', 'notes.user', 'handler']);
+        $ticket->load(['store', 'logs.user', 'notes.user', 'handler', 'maintenanceType']);
         abort_unless($request->user()->canSeeStore($ticket->store), 403);
 
         return view('tickets.show', [
