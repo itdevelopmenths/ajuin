@@ -271,7 +271,7 @@ class TicketController extends Controller
      */
     private function allowedStatuses(Request $request, Ticket $ticket): array
     {
-        if ($request->user()->hasRole('Super Admin')) {
+        if ($request->user()->hasRole(['Super Admin', 'HRGA'])) {
             return array_values(array_diff(Ticket::STATUSES, [$ticket->status]));
         }
 

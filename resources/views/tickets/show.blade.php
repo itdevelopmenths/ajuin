@@ -88,7 +88,7 @@
                     <div style="font-size:.8125rem;font-weight:500;color:#475569">{{ $ticket->source }}</div>
                 </div>
                 @if($ticket->payment_amount !== null || auth()->user()->can('ticket.update_status'))
-                <div>
+                <div style="grid-column:span 2;min-width:0">
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Nominal Pembayaran</div>
                     @can('ticket.update_status')
                         <div id="payment-amount-display" style="display:flex;align-items:center;gap:.375rem">
@@ -101,10 +101,10 @@
                         </div>
                         <form method="post" action="{{ route('tickets.update-payment', $ticket) }}" id="payment-amount-form" style="display:none;margin-top:.375rem">
                             @csrf @method('PATCH')
-                            <div style="display:flex;gap:.375rem">
-                                <input type="number" name="payment_amount" min="0" step="1" class="form-input" style="padding:.35rem .5rem;font-size:.8125rem;width:120px" value="{{ $ticket->payment_amount }}" required>
-                                <button type="submit" class="btn btn-primary" style="padding:.35rem .625rem;font-size:.75rem">Simpan</button>
-                                <button type="button" id="payment-amount-cancel-btn" class="btn btn-secondary" style="padding:.35rem .625rem;font-size:.75rem">Batal</button>
+                            <div style="display:flex;flex-wrap:wrap;gap:.375rem">
+                                <input type="number" name="payment_amount" min="0" step="1" class="form-input" style="padding:.35rem .5rem;font-size:.8125rem;width:110px;flex:0 0 auto" value="{{ $ticket->payment_amount }}" required>
+                                <button type="submit" class="btn btn-primary" style="padding:.35rem .625rem;font-size:.75rem;white-space:nowrap">Simpan</button>
+                                <button type="button" id="payment-amount-cancel-btn" class="btn btn-secondary" style="padding:.35rem .625rem;font-size:.75rem;white-space:nowrap">Batal</button>
                             </div>
                         </form>
                     @else
