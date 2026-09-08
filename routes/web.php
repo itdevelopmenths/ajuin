@@ -53,6 +53,10 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:ticket.update_status')
         ->name('tickets.update-status');
 
+    Route::patch('/tickets/{ticket}/payment', [TicketController::class, 'updatePayment'])
+        ->middleware('permission:ticket.update_status')
+        ->name('tickets.update-payment');
+
     Route::post('/tickets/{ticket}/notes', [TicketController::class, 'addNote'])
         ->middleware('permission:ticket.update_status')
         ->name('tickets.notes.store');

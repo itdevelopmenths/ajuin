@@ -199,6 +199,20 @@ class TicketController extends Controller
         return back()->with('status', 'Status ticket diperbarui.');
     }
 
+    public function updatePayment(Request $request, Ticket $ticket): RedirectResponse
+    {
+        $ticket->load('store');
+        abort_unless($request->user()->canSeeStore($ticket->store), 403);
+
+        $data = $request->validate([
+            'payment_amount' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $ticket->update(['payment_amount' => $data['payment_amount']]);
+
+        return back()->with('status', 'Nominal pembayaran diperbarui.');
+    }
+
     public function addNote(Request $request, Ticket $ticket): RedirectResponse
     {
         abort_unless($request->user()->canSeeStore($ticket->store), 403);

@@ -87,10 +87,29 @@
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Sumber</div>
                     <div style="font-size:.8125rem;font-weight:500;color:#475569">{{ $ticket->source }}</div>
                 </div>
-                @if($ticket->payment_amount !== null)
+                @if($ticket->payment_amount !== null || auth()->user()->can('ticket.update_status'))
                 <div>
                     <div style="font-size:.75rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.375rem">Nominal Pembayaran</div>
-                    <div style="font-size:.875rem;font-weight:700;color:#1e293b">Rp {{ number_format($ticket->payment_amount, 0, ',', '.') }}</div>
+                    @can('ticket.update_status')
+                        <div id="payment-amount-display" style="display:flex;align-items:center;gap:.375rem">
+                            <span id="payment-amount-text" style="font-size:.875rem;font-weight:700;color:#1e293b">
+                                {{ $ticket->payment_amount !== null ? 'Rp ' . number_format($ticket->payment_amount, 0, ',', '.') : '—' }}
+                            </span>
+                            <button type="button" id="payment-amount-edit-btn" title="Edit nominal pembayaran" style="background:none;border:none;cursor:pointer;color:#64748b;padding:.125rem;line-height:0">
+                                <svg style="width:14px;height:14px" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+                            </button>
+                        </div>
+                        <form method="post" action="{{ route('tickets.update-payment', $ticket) }}" id="payment-amount-form" style="display:none;margin-top:.375rem">
+                            @csrf @method('PATCH')
+                            <div style="display:flex;gap:.375rem">
+                                <input type="number" name="payment_amount" min="0" step="1" class="form-input" style="padding:.35rem .5rem;font-size:.8125rem;width:120px" value="{{ $ticket->payment_amount }}" required>
+                                <button type="submit" class="btn btn-primary" style="padding:.35rem .625rem;font-size:.75rem">Simpan</button>
+                                <button type="button" id="payment-amount-cancel-btn" class="btn btn-secondary" style="padding:.35rem .625rem;font-size:.75rem">Batal</button>
+                            </div>
+                        </form>
+                    @else
+                        <div style="font-size:.875rem;font-weight:700;color:#1e293b">Rp {{ number_format($ticket->payment_amount, 0, ',', '.') }}</div>
+                    @endcan
                 </div>
                 @endif
                 <div>
@@ -323,6 +342,25 @@
         modal.addEventListener('click', (e) => { if (e.target === modal) closeAttachmentModal(); });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && modal.style.display !== 'none') closeAttachmentModal();
+        });
+    })();
+
+    (function () {
+        const editBtn = document.getElementById('payment-amount-edit-btn');
+        const cancelBtn = document.getElementById('payment-amount-cancel-btn');
+        const display = document.getElementById('payment-amount-display');
+        const form = document.getElementById('payment-amount-form');
+        if (!editBtn) return;
+
+        editBtn.addEventListener('click', () => {
+            display.style.display = 'none';
+            form.style.display = 'block';
+            form.querySelector('input[name="payment_amount"]').focus();
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            form.style.display = 'none';
+            display.style.display = 'flex';
         });
     })();
 

@@ -138,6 +138,19 @@ $(function () {
         serverSide: true,
         pageLength: 25,
         order: [[6, 'desc']],
+        stateSave: true,
+        stateSaveParams: function (settings, data) {
+            data.filters = getFilters();
+        },
+        stateLoadParams: function (settings, data) {
+            if (!data.filters) return;
+            $('#f-status').val(data.filters.status || '');
+            $('#f-type').val(data.filters.type || '');
+            $('#f-store').val(data.filters.store_id || '').trigger('change');
+            $('#f-spv').val(data.filters.spv_id || '').trigger('change');
+            $('#f-from').val(data.filters.from || '');
+            $('#f-to').val(data.filters.to || '');
+        },
         language: {
             processing: 'Memuat…',
             search: 'Cari:',
@@ -170,6 +183,7 @@ $(function () {
         $('#f-status,#f-type').val('');
         $('#f-store,#f-spv').val('').trigger('change');
         $('#f-from,#f-to').val('');
+        table.state.clear();
         table.search('').ajax.reload();
     });
 
